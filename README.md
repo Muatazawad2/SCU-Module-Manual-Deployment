@@ -7,6 +7,10 @@ the Entra admin center and verified against Microsoft Graph afterward.
 
 **Repository reference:** <https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module>
 
+> **Part 2 available:** [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) covers
+> pulling real usage data with this app and a redesigned, bug-fixed, light-mode
+> Power BI template (`PowerBI/SCU-Dashboard-Light.pbit`).
+
 ## Environment used for this run
 
 | Item | Value |
@@ -126,17 +130,19 @@ Both match the expected values in `docs/APP-REGISTRATION.md` exactly.
 
 ---
 
-## Next step (not run here)
+## Next step — pulling data and the Power BI dashboard
 
-The app is now ready to use with:
+This walkthrough focused on the manual/portal configuration path only. The
+app is ready to use with:
 
 ```powershell
-.\SCU-Setup.ps1 -AppId 72bb0a2b-c028-4a0f-bb57-78a81db6fc18
+.\SCU-Setup.ps1 -AppId 72bb0a2b-c028-4a0f-bb57-78a81db6fc18 -Capacity "SecCo"
 ```
 
-(or the equivalent device-code sign-in) to pull real SCU usage data — intentionally
-not run as part of this walkthrough, which focused on the manual/portal
-configuration path only.
+to pull real SCU usage data and build the Power BI dashboard — see
+[`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) for the full run (actual
+numbers from this dev tenant) plus a redesigned, bug-fixed, light-mode
+dashboard template.
 
 ---
 
