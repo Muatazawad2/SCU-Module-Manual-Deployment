@@ -14,6 +14,7 @@ PowerBI/
   SCU-Dashboard-Light.pbit   ← redesigned template (light theme, bug-fixed queries)
   Images/
     01-cover-page.png        ← rendered Cover page, live dev-tenant data
+    02-guide-page.png        ← rendered Guide page (definitions/glossary)
 ```
 
 > The `.pbit` is a **template**: it ships with the Power Query/model schema
@@ -119,9 +120,28 @@ with round-trip byte-identical checks before saving):
   **Load** doesn't require typing a path by hand (update it to your own
   `SCU-Report.xlsx` location via **Transform data → Edit Parameters**).
 
+**Follow-up fix — card visuals on the other 9 pages:** the first pass only
+restyled the Cover page's 8 KPI cards. A full visual audit found the
+remaining 27 "card" visuals across Overview, Sessions, Trends, Plugins Used,
+Users, Plugin Catalog, Promptbooks, and Analytics still had the original
+template's dark-navy background (`#1E2532`), slate border (`#334155`), and
+cyan value text (`#50E6FF`) — which clashed badly once the page background
+became light. Every one of those cards was updated to the same white
+card / colored border+value-text pattern used on Cover (colors cycled per
+page: blue `#0078D4`, purple `#6D28D9`, green `#047857`, amber `#B45309`,
+...). A full-text scan of the saved layout afterward confirmed zero
+remaining instances of the old dark-card colors anywhere in the report.
+
 ### Result
 
 ![Cover page — light mode, live dev-tenant data](PowerBI/Images/01-cover-page.png)
+
+![Guide page — definitions and glossary](PowerBI/Images/02-guide-page.png)
+
+The remaining 8 pages (Overview, Sessions, Trends, Plugins Used, Users,
+Plugin Catalog, Promptbooks, Analytics) follow the same light-card pattern
+shown above — not individually screenshotted in this pass, but verifiable by
+opening the template.
 
 ---
 
