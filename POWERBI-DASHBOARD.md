@@ -13,8 +13,16 @@ the public repo.
 PowerBI/
   SCU-Dashboard-Light.pbit   ← redesigned template (light theme, bug-fixed queries)
   Images/
-    01-cover-page.png        ← rendered Cover page, live dev-tenant data
-    02-guide-page.png        ← rendered Guide page (definitions/glossary)
+    01-cover-page.png           ← Cover — 8 KPI cards, live dev-tenant data
+    02-guide-page.png           ← Guide — definitions/glossary
+    03-overview-page.png        ← Overview — daily trend, by-user, by-plugin
+    04-sessions-page.png        ← Sessions — filterable interaction log
+    05-trends-page.png          ← Trends — 7-day forecast, day-of-week pattern
+    06-plugins-used-page.png    ← Plugins Used — treemap + cost-efficiency scatter
+    07-users-page.png           ← Users — per-user leaderboard
+    08-plugin-catalog-page.png  ← Plugin Catalog — all 90 tenant plugins
+    09-promptbooks-page.png     ← Promptbooks (blank — API returned HTTP 500, see Step 2)
+    10-analytics-page.png       ← Analytics — waterfall, anomaly detection
 ```
 
 > The `.pbit` is a **template**: it ships with the Power Query/model schema
@@ -132,16 +140,48 @@ page: blue `#0078D4`, purple `#6D28D9`, green `#047857`, amber `#B45309`,
 ...). A full-text scan of the saved layout afterward confirmed zero
 remaining instances of the old dark-card colors anywhere in the report.
 
-### Result
+### Result — all 10 pages, light mode, live dev-tenant data
 
-![Cover page — light mode, live dev-tenant data](PowerBI/Images/01-cover-page.png)
+**Cover**
 
-![Guide page — definitions and glossary](PowerBI/Images/02-guide-page.png)
+![Cover page](PowerBI/Images/01-cover-page.png)
 
-The remaining 8 pages (Overview, Sessions, Trends, Plugins Used, Users,
-Plugin Catalog, Promptbooks, Analytics) follow the same light-card pattern
-shown above — not individually screenshotted in this pass, but verifiable by
-opening the template.
+**Guide**
+
+![Guide page](PowerBI/Images/02-guide-page.png)
+
+**Overview**
+
+![Overview page](PowerBI/Images/03-overview-page.png)
+
+**Sessions**
+
+![Sessions page](PowerBI/Images/04-sessions-page.png)
+
+**Trends**
+
+![Trends page](PowerBI/Images/05-trends-page.png)
+
+**Plugins Used**
+
+![Plugins Used page](PowerBI/Images/06-plugins-used-page.png)
+
+**Users**
+
+![Users page](PowerBI/Images/07-users-page.png)
+
+**Plugin Catalog**
+
+![Plugin Catalog page](PowerBI/Images/08-plugin-catalog-page.png)
+
+**Promptbooks** *(blank — this tenant's promptbooks API returned HTTP 500;
+see Step 1/2 above — the page renders cleanly instead of crashing the report)*
+
+![Promptbooks page](PowerBI/Images/09-promptbooks-page.png)
+
+**Analytics**
+
+![Analytics page](PowerBI/Images/10-analytics-page.png)
 
 ---
 
