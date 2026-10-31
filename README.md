@@ -13,7 +13,8 @@ the Entra admin center and verified against Microsoft Graph afterward.
 >
 > **Part 3 available:** [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
 > replaces `SCU-Run.ps1`'s data pull with a Logic App, a Power Automate flow,
-> and native Power Query — all three tried live against this tenant.
+> and native Power Query — all three tried live against this tenant, proof
+> screenshots below.
 
 ## Environment used for this run
 
@@ -147,6 +148,56 @@ to pull real SCU usage data and build the Power BI dashboard — see
 [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) for the full run (actual
 numbers from this dev tenant) plus a redesigned, bug-fixed, light-mode
 dashboard template.
+
+---
+
+## Part 3 — Automating the data pull without PowerShell
+
+Full write-up: [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
+
+Three substitutes for `SCU-Run.ps1`'s data-pull stage, each built and
+verified with **live tenant data** (same dev tenant, same undocumented
+Security Copilot usage API). Key finding up front: the API rejects app-only
+(client-credentials) tokens outright — delegated, signed-in-user tokens only,
+same constraint the original PowerShell already assumes.
+
+> **Note on these screenshots:** interactive sign-in to the Azure Portal and
+> the Power Automate Maker portal both hit a one-time, device-bound MFA
+> registration wall that needed the account owner physically present — not
+> something to push through unattended. So unlike Parts 1–2, these aren't
+> portal-click screenshots; they're rendered proof-of-work pages (architecture
+> + live API output) built because the resources themselves were created and
+> verified entirely via CLI/REST instead of the Portal UI. Each links to the
+> underlying ARM template / flow definition / M code.
+
+### Approach 1 — Azure Logic App ([ARM template](Automation-Alternatives/LogicApp/azuredeploy.json))
+
+Deployed via `az deployment group create`, triggered manually, confirmed
+`Succeeded` — 21 real hourly rows + 90 skillsets pulled.
+
+![Logic App architecture and live proof](Automation-Alternatives/LogicApp/01-architecture-and-proof.png)
+
+### Approach 2 — Power Automate Cloud Flow ([flow definition](Automation-Alternatives/PowerAutomate/flow-definition.json))
+
+Maker portal was unreachable (same MFA wall), so the flow was created
+directly via the Dataverse Web API, activated, and confirmed genuinely
+"Started" — triggered manually, 21 rows pulled.
+
+![Power Automate architecture and live proof](Automation-Alternatives/PowerAutomate/01-architecture-and-proof.png)
+
+### Approach 3 — Native Power Query (M)
+
+No blockers here — runs entirely inside Power BI Desktop. A Blank Query's M
+code calls the SCU API directly via `Web.Contents()`, so Power BI's own
+**Refresh** button is the whole automation.
+
+![Power Query M code and live result](Automation-Alternatives/PowerQuery/00-architecture-and-code.png)
+
+See [`AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
+for the full comparison table and tradeoffs. Each approach's `summary.html`
+is a styled version of the same content — GitHub shows it as raw source in
+the browser, so download and open it locally (or view the `.md`/images above)
+to see it rendered.
 
 ---
 
