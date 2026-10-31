@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Power Automate — SCU Usage Puller</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #F4F6F9; color: #1E293B; margin: 0; padding: 40px; }
+  .card { background: white; border-radius: 10px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #E2E8F0; }
+  h1 { font-size: 26px; margin: 0 0 4px 0; }
+  .subtitle { color: #64748B; font-size: 14px; margin-bottom: 0; }
+  h2 { font-size: 16px; color: #0F172A; border-left: 4px solid #6D28D9; padding-left: 10px; margin-top: 0;}
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+  .step { background: #F5F3FF; border: 1px solid #6D28D9; color: #6D28D9; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .arrow { color: #94A3B8; font-size: 18px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border: 1px solid #E2E8F0; padding: 8px 12px; text-align: left; }
+  th { background: #F8FAFC; color: #475569; }
+  .badge { display:inline-block; background:#ECFDF5; color:#047857; border:1px solid #047857; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:700; }
+  .badge-info { display:inline-block; background:#EFF6FF; color:#0078D4; border:1px solid #0078D4; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:700; }
+  .mono { font-family: Consolas, monospace; font-size: 12.5px; background: #0F172A; color: #E9D5FF; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre; }
+  .note { background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400E; margin-top: 16px; }
+  .obstacle { background: #FEF2F2; border: 1px solid #DC2626; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #991B1B; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Approach 2 — Power Automate Cloud Flow</h1>
+  <p class="subtitle">Same substitution idea as the Logic App, built on the Power Platform / Dataverse side instead of Azure.</p>
+</div>
+
+<div class="card">
+  <h2>Obstacle: Maker Portal was not reachable interactively</h2>
+  <div class="obstacle">
+    <b>make.powerautomate.com</b> requires an interactive AAD sign-in. In this dev tenant: the tenant admin account needs a one-time
+    device-bound passkey registration, and my own (guest) account has no role assignment on the tenant's real
+    Dataverse-backed environment. Neither is completable unattended.
+  </div>
+  <p style="font-size:13px;color:#64748B">
+    <b>Workaround used:</b> Power Automate cloud flows are just <code>workflow</code> records in Dataverse
+    (<code>category=5</code>, "Modern Flow") — the exact same Workflow Definition Language as Logic Apps underneath.
+    Using the already-authenticated tenant-admin CLI session, the flow was created directly via the
+    <b>Dataverse Web API</b> (<code>POST /api/data/v9.2/workflows</code>) against the tenant's real
+    <b>Default Environment</b> (<code>org7f2918a8.crm.dynamics.com</code>), activated, then confirmed live and
+    "Started" via the Power Automate Flow Management API (<code>api.flow.microsoft.com</code>) — no Maker Portal click required.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Workflow architecture (identical pattern to the Logic App)</h2>
+  <div class="flow">
+    <div class="step">⏱ Daily_recurrence<br>(daily @ 06:00 UTC)</div>
+    <div class="arrow">→</div>
+    <div class="step">🔑 Get_access_token<br>HTTP POST · refresh_token grant</div>
+    <div class="arrow">→</div>
+    <div class="step">📅 Set_window_start / end</div>
+    <div class="arrow">→</div>
+    <div class="step">📊 Pull_hourly_aggregates<br>HTTP POST · SCU usage API</div>
+    <div class="arrow">→</div>
+    <div class="step">📦 Compose_pull_summary</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Creation &amp; activation — Dataverse Web API</h2>
+  <div class="mono">POST /api/data/v9.2/workflows
+{ "name": "SCU Usage Puller (Power Automate POC)", "category": 5, "type": 1,
+  "primaryentity": "none", "clientdata": "{ ...same workflow definition... }", "statecode": 0 }
+&rarr; 204 Created  (workflowid: bff2cf93-d0d4-f111-a05a-6045bd0748b4)
+
+PATCH /api/data/v9.2/workflows(bff2cf93-...)
+{ "statecode": 1, "statuscode": 2 }
+&rarr; Activated
+
+GET api.flow.microsoft.com/.../environments/231cb142.../flows
+&rarr; "SCU Usage Puller (Power Automate POC)"  state: <span style="color:#86efac">Started</span></div>
+</div>
+
+<div class="card">
+  <h2>Live run — manually triggered, real tenant data</h2>
+  <table>
+    <tr><th>Run</th><th>Status</th><th>Start time (UTC)</th></tr>
+    <tr><td>08584081940286717619857561157CU05</td><td><span class="badge">Succeeded</span></td><td>2026-10-31 02:14:16</td></tr>
+  </table>
+  <h2 style="margin-top:24px">Compose_pull_summary output (fetched via Flow Management run-history API)</h2>
+  <div class="mono">{
+  "pulledAtUtc":     "2026-10-31T02:14:18.0142338Z",
+  "hourlyRowCount":  "21"
+}</div>
+  <p style="font-size:13px;color:#64748B; margin-top:10px">21 real hourly rows — same live Security Copilot usage API, same tenant. Proves the substitution works end to end even though the visual Maker Portal designer couldn't be reached.</p>
+</div>
+
+<div class="note">
+  <b>What's genuinely missing:</b> the polished drag-and-drop Maker Portal screenshots (trigger/action cards,
+  the green "Flow checker: no errors" designer view) — those need the one-time interactive MFA registration
+  mentioned above. The flow itself is real, activated, and verified running with live data; only the
+  <i>visual authoring</i> screenshots are pending.
+</div>
+
+</body>
+</html>

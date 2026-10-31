@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "type": "string",
+      "defaultValue": "scu-usage-puller-logicapp"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "tenantId": { "type": "string" },
+    "clientId": { "type": "string" },
+    "apiAudience": { "type": "string" },
+    "podId": { "type": "string" },
+    "workspace": { "type": "string" },
+    "capacity": { "type": "string" },
+    "refreshToken": { "type": "securestring" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "tenantId": { "type": "string" },
+            "clientId": { "type": "string" },
+            "apiAudience": { "type": "string" },
+            "podId": { "type": "string" },
+            "workspace": { "type": "string" },
+            "capacity": { "type": "string" },
+            "refreshToken": { "type": "securestring" }
+          },
+          "triggers": {
+            "Daily_recurrence": {
+              "type": "Recurrence",
+              "recurrence": {
+                "frequency": "Day",
+                "interval": 1,
+                "schedule": { "hours": [6], "minutes": [0] }
+              }
+            }
+          },
+          "actions": {
+            "Get_access_token": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "@{concat('https://login.microsoftonline.com/', parameters('tenantId'), '/oauth2/v2.0/token')}",
+                "headers": { "Content-Type": "application/x-www-form-urlencoded" },
+                "body": "@{concat('grant_type=refresh_token&client_id=', parameters('clientId'), '&refresh_token=', parameters('refreshToken'), '&scope=', parameters('apiAudience'), '%2FPurview.DelegatedAccess%20offline_access')}"
+              },
+              "runAfter": {}
+            },
+            "Set_window_start": {
+              "type": "Compose",
+              "inputs": "@formatDateTime(addDays(utcNow(), -7), 'yyyy-MM-ddTHH:mm:ss.fffZ')",
+              "runAfter": { "Get_access_token": ["Succeeded"] }
+            },
+            "Set_window_end": {
+              "type": "Compose",
+              "inputs": "@formatDateTime(utcNow(), 'yyyy-MM-ddTHH:mm:ss.fffZ')",
+              "runAfter": { "Set_window_start": ["Succeeded"] }
+            },
+            "Pull_hourly_aggregates": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "@{concat('https://us.api.securityplatform.microsoft.com/pods/', parameters('podId'), '/workspaces/', parameters('workspace'), '/securitycopilot/usage/', parameters('capacity'), '/aggregates/hourly')}",
+                "headers": {
+                  "Authorization": "@{concat('Bearer ', body('Get_access_token')?['access_token'])}",
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "startDate": "@{outputs('Set_window_start')}",
+                  "endDate": "@{outputs('Set_window_end')}"
+                }
+              },
+              "runAfter": { "Set_window_end": ["Succeeded"] }
+            },
+            "Pull_skillset_catalog": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "@{concat('https://us.api.securityplatform.microsoft.com/pods/', parameters('podId'), '/workspaces/', parameters('workspace'), '/securitycopilot/skillsets')}",
+                "headers": {
+                  "Authorization": "@{concat('Bearer ', body('Get_access_token')?['access_token'])}"
+                }
+              },
+              "runAfter": { "Pull_hourly_aggregates": ["Succeeded"] }
+            },
+            "Compose_pull_summary": {
+              "type": "Compose",
+              "inputs": {
+                "pulledAtUtc": "@{utcNow()}",
+                "windowStart": "@{outputs('Set_window_start')}",
+                "windowEnd": "@{outputs('Set_window_end')}",
+                "hourlyRowCount": "@{length(body('Pull_hourly_aggregates')?['value'])}",
+                "skillsetCount": "@{length(body('Pull_skillset_catalog')?['value'])}"
+              },
+              "runAfter": { "Pull_skillset_catalog": ["Succeeded"] }
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "tenantId": { "value": "[parameters('tenantId')]" },
+          "clientId": { "value": "[parameters('clientId')]" },
+          "apiAudience": { "value": "[parameters('apiAudience')]" },
+          "podId": { "value": "[parameters('podId')]" },
+          "workspace": { "value": "[parameters('workspace')]" },
+          "capacity": { "value": "[parameters('capacity')]" },
+          "refreshToken": { "value": "[parameters('refreshToken')]" }
+        }
+      }
+    }
+  ]
+}

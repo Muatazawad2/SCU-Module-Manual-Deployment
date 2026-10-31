@@ -10,6 +10,10 @@ the Entra admin center and verified against Microsoft Graph afterward.
 > **Part 2 available:** [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) covers
 > pulling real usage data with this app and a redesigned, bug-fixed, light-mode
 > Power BI template (`PowerBI/SCU-Dashboard-Light.pbit`).
+>
+> **Part 3 available:** [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
+> replaces `SCU-Run.ps1`'s data pull with a Logic App, a Power Automate flow,
+> and native Power Query — all three tried live against this tenant.
 
 ## Environment used for this run
 

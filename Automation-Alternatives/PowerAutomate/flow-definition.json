@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": { "defaultValue": {}, "type": "Object" }
+  },
+  "triggers": {
+    "Daily_recurrence": {
+      "type": "Recurrence",
+      "recurrence": { "frequency": "Day", "interval": 1, "schedule": { "hours": [6], "minutes": [0] } }
+    }
+  },
+  "actions": {
+    "Get_access_token": {
+      "type": "Http",
+      "inputs": {
+        "method": "POST",
+        "uri": "https://login.microsoftonline.com/e6cf700c-2029-4e98-aedd-f589e62f7316/oauth2/v2.0/token",
+        "headers": { "Content-Type": "application/x-www-form-urlencoded" },
+        "body": "grant_type=refresh_token&client_id=72bb0a2b-c028-4a0f-bb57-78a81db6fc18&refresh_token=PLACEHOLDER_REFRESH_TOKEN&scope=73c2949e-da2d-457a-9607-fcc665198967%2FPurview.DelegatedAccess%20offline_access"
+      },
+      "runAfter": {}
+    },
+    "Set_window_start": {
+      "type": "Compose",
+      "inputs": "@formatDateTime(addDays(utcNow(), -7), 'yyyy-MM-ddTHH:mm:ss.fffZ')",
+      "runAfter": { "Get_access_token": ["Succeeded"] }
+    },
+    "Set_window_end": {
+      "type": "Compose",
+      "inputs": "@formatDateTime(utcNow(), 'yyyy-MM-ddTHH:mm:ss.fffZ')",
+      "runAfter": { "Set_window_start": ["Succeeded"] }
+    },
+    "Pull_hourly_aggregates": {
+      "type": "Http",
+      "inputs": {
+        "method": "POST",
+        "uri": "https://us.api.securityplatform.microsoft.com/pods/ee221a39-3ce7-48ee-8b63-18bd56c52288/workspaces/default/securitycopilot/usage/SecCo/aggregates/hourly",
+        "headers": {
+          "Authorization": "@{concat('Bearer ', body('Get_access_token')?['access_token'])}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "startDate": "@{outputs('Set_window_start')}",
+          "endDate": "@{outputs('Set_window_end')}"
+        }
+      },
+      "runAfter": { "Set_window_end": ["Succeeded"] }
+    },
+    "Compose_pull_summary": {
+      "type": "Compose",
+      "inputs": {
+        "pulledAtUtc": "@{utcNow()}",
+        "hourlyRowCount": "@{length(body('Pull_hourly_aggregates')?['value'])}"
+      },
+      "runAfter": { "Pull_hourly_aggregates": ["Succeeded"] }
+    }
+  },
+  "outputs": {}
+}

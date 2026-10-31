@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Power Query — SCU Usage Puller</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #F4F6F9; color: #1E293B; margin: 0; padding: 40px; }
+  .card { background: white; border-radius: 10px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #E2E8F0; }
+  h1 { font-size: 26px; margin: 0 0 4px 0; }
+  .subtitle { color: #64748B; font-size: 14px; margin-bottom: 0; }
+  h2 { font-size: 16px; color: #0F172A; border-left: 4px solid #047857; padding-left: 10px; margin-top: 0;}
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border: 1px solid #E2E8F0; padding: 8px 12px; text-align: left; }
+  th { background: #F8FAFC; color: #475569; }
+  .badge { display:inline-block; background:#ECFDF5; color:#047857; border:1px solid #047857; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:700; }
+  .mono { font-family: Consolas, monospace; font-size: 12px; background: #0F172A; color: #BBF7D0; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre; line-height: 1.5; }
+  .kw { color: #93C5FD; } .str { color: #FDE68A; } .fn { color: #C4B5FD; } .cm { color: #64748B; font-style: italic; }
+  .note { background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400E; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Approach 3 — Native Power Query (M)</h1>
+  <p class="subtitle">No PowerShell, no Logic App, no Power Automate — Power BI's own Refresh button does the whole pull.</p>
+</div>
+
+<div class="card">
+  <h2>Why this is different from the other two</h2>
+  <p>Logic Apps and Power Automate both still need a <i>landing zone</i> (a file, a dataset, a table) that Power BI
+  then imports separately. Power Query can skip that middle step entirely: a Blank Query's M code calls the
+  refresh-token exchange and the SCU usage API <b>directly</b>, inside the same engine that already powers
+  every other query in the report. Opening the <code>.pbit</code> and clicking <b>Refresh</b> is the entire
+  "automation."</p>
+</div>
+
+<div class="card">
+  <h2>The M code (Blank Query → Advanced Editor)</h2>
+  <div class="mono"><span class="kw">let</span>
+    <span class="cm">// In production, store this as a Power Query Parameter (Home &gt; Manage Parameters)
+    // rather than inline - shown inline here to keep the POC self-contained.</span>
+    ScuRefreshToken = <span class="str">"•••(DPAPI-protected token, same one SCU-Setup.ps1 already obtained)•••"</span>,
+
+    GetAccessToken = () =&gt;
+        <span class="kw">let</span>
+            TenantId = <span class="str">"e6cf700c-2029-4e98-aedd-f589e62f7316"</span>,
+            ClientId = <span class="str">"72bb0a2b-c028-4a0f-bb57-78a81db6fc18"</span>,
+            ApiAudience = <span class="str">"73c2949e-da2d-457a-9607-fcc665198967"</span>,
+            TokenEndpoint = <span class="str">"https://login.microsoftonline.com/"</span> &amp; TenantId &amp; <span class="str">"/oauth2/v2.0/token"</span>,
+            FormBody = <span class="str">"grant_type=refresh_token&amp;client_id="</span> &amp; ClientId &amp; <span class="str">"&amp;refresh_token="</span> &amp; ScuRefreshToken
+                       &amp; <span class="str">"&amp;scope="</span> &amp; ApiAudience &amp; <span class="str">"%2FPurview.DelegatedAccess%20offline_access"</span>,
+            Response = <span class="fn">Json.Document</span>(<span class="fn">Web.Contents</span>(TokenEndpoint, [
+                Headers = [#<span class="str">"Content-Type"</span>=<span class="str">"application/x-www-form-urlencoded"</span>],
+                Content = <span class="fn">Text.ToBinary</span>(FormBody)
+            ])),
+            AccessToken = Response[access_token]
+        <span class="kw">in</span>
+            AccessToken,
+
+    PodId = <span class="str">"ee221a39-3ce7-48ee-8b63-18bd56c52288"</span>, Workspace = <span class="str">"default"</span>, Capacity = <span class="str">"SecCo"</span>,
+    BaseUrl = <span class="str">"https://us.api.securityplatform.microsoft.com/pods/"</span> &amp; PodId &amp; <span class="str">"/workspaces/"</span> &amp; Workspace
+             &amp; <span class="str">"/securitycopilot/usage/"</span> &amp; Capacity,
+
+    NowUtc = <span class="fn">DateTimeZone.RemoveZone</span>(<span class="fn">DateTimeZone.FixedUtcNow</span>()),
+    WindowStart = <span class="fn">DateTime.ToText</span>(NowUtc - #duration(7,0,0,0), <span class="str">"yyyy-MM-ddTHH:mm:ss.fff"</span>) &amp; <span class="str">"Z"</span>,
+    WindowEnd = <span class="fn">DateTime.ToText</span>(NowUtc, <span class="str">"yyyy-MM-ddTHH:mm:ss.fff"</span>) &amp; <span class="str">"Z"</span>,
+    RequestBody = <span class="str">"{""startDate"":"""</span> &amp; WindowStart &amp; <span class="str">""",""endDate"":"""</span> &amp; WindowEnd &amp; <span class="str">"""}"</span>,
+
+    Token = GetAccessToken(),
+    Response = <span class="fn">Json.Document</span>(<span class="fn">Web.Contents</span>(BaseUrl &amp; <span class="str">"/aggregates/hourly"</span>, [
+        Headers = [Authorization = <span class="str">"Bearer "</span> &amp; Token, #<span class="str">"Content-Type"</span>=<span class="str">"application/json"</span>],
+        Content = <span class="fn">Text.ToBinary</span>(RequestBody)
+    ])),
+    Rows = Response[value],
+    ResultTable = <span class="fn">Table.FromRecords</span>(Rows)
+<span class="kw">in</span>
+    ResultTable</div>
+</div>
+
+<div class="card">
+  <h2>Result — live data, no syntax errors</h2>
+  <img src="01-live-data-result.png" style="width:100%; border:1px solid #E2E8F0; border-radius:8px;" />
+  <p style="font-size:13px;color:#64748B; margin-top:10px">
+    <b>10 columns, 21 rows</b> — the exact same hourly aggregates the Logic App and Power Automate runs pulled, now coming straight from Power BI's own Refresh, no intermediate file or service.
+  </p>
+</div>
+
+<div class="note">
+  <b>Two things worth knowing before using this in production:</b>
+  <ol style="margin:8px 0 0 18px;padding:0">
+    <li>The refresh token should be a <b>Power Query Parameter</b>, not inlined in the M code as done here for speed — Manage Parameters &gt; New Parameter, type Text, mark sensitive.</li>
+    <li>Each refresh reuses the same refresh token rather than capturing a rotated one (M is functional/stateless — it can't write a new value back to its own parameter). The token is valid ~90 days per the original tool's README, so for daily/weekly scheduled refreshes this is a non-issue; for very long unattended gaps, re-run <code>SCU-Setup.ps1</code> once to mint a fresh one.</li>
+  </ol>
+</div>
+
+</body>
+</html>

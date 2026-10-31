@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Logic App — SCU Usage Puller</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #F4F6F9; color: #1E293B; margin: 0; padding: 40px; }
+  .card { background: white; border-radius: 10px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #E2E8F0; }
+  h1 { font-size: 26px; margin: 0 0 4px 0; }
+  .subtitle { color: #64748B; font-size: 14px; margin-bottom: 0; }
+  h2 { font-size: 16px; color: #0F172A; border-left: 4px solid #0078D4; padding-left: 10px; margin-top: 0;}
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+  .step { background: #EFF6FF; border: 1px solid #0078D4; color: #0078D4; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .arrow { color: #94A3B8; font-size: 18px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border: 1px solid #E2E8F0; padding: 8px 12px; text-align: left; }
+  th { background: #F8FAFC; color: #475569; }
+  .ok { color: #047857; font-weight: 700; }
+  .badge { display:inline-block; background:#ECFDF5; color:#047857; border:1px solid #047857; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:700; }
+  .mono { font-family: Consolas, monospace; font-size: 12.5px; background: #0F172A; color: #D1FAE5; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre; }
+  .note { background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400E; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Approach 1 — Azure Logic App</h1>
+  <p class="subtitle">Replacing SCU-Run.ps1's data-pull stage with a cloud-hosted, scheduled workflow — zero PowerShell, zero local machine dependency.</p>
+</div>
+
+<div class="card">
+  <h2>Workflow architecture</h2>
+  <div class="flow">
+    <div class="step">⏱ Recurrence<br>(daily @ 06:00 UTC)</div>
+    <div class="arrow">→</div>
+    <div class="step">🔑 Get_access_token<br>HTTP POST · refresh_token grant</div>
+    <div class="arrow">→</div>
+    <div class="step">📅 Set_window_start / end<br>Compose (last 7 days)</div>
+    <div class="arrow">→</div>
+    <div class="step">📊 Pull_hourly_aggregates<br>HTTP POST · SCU usage API</div>
+    <div class="arrow">→</div>
+    <div class="step">🧩 Pull_skillset_catalog<br>HTTP GET · SCU usage API</div>
+    <div class="arrow">→</div>
+    <div class="step">📦 Compose_pull_summary</div>
+  </div>
+  <p style="font-size:13px;color:#64748B">Deployed as a Consumption <code>Microsoft.Logic/workflows</code> resource via ARM template (<code>azuredeploy.json</code>) — same convention as the repo's existing Logic Apps Module scenarios. The refresh token is passed as a <code>securestring</code> workflow parameter (encrypted at rest by the Logic Apps runtime) rather than a Key Vault reference, because this tenant's Azure Policy disables public network access on new Key Vault/Storage resources by default — blocking the SaaS Logic App from reaching them without private networking.</p>
+</div>
+
+<div class="card">
+  <h2>Deployment — Azure CLI</h2>
+  <div class="mono">PS&gt; az deployment group create --resource-group SCU-Automation-Explore `
+      --template-file azuredeploy.json `
+      --parameters tenantId=e6cf700c-... clientId=72bb0a2b-... capacity=SecCo refreshToken=•••
+
+properties.provisioningState : <span style="color:#86efac">Succeeded</span></div>
+</div>
+
+<div class="card">
+  <h2>Live run — manually triggered, real tenant data</h2>
+  <table>
+    <tr><th>Run</th><th>Status</th><th>Start time (UTC)</th></tr>
+    <tr><td>08584081946486334271070492638CU38</td><td><span class="badge">Succeeded</span></td><td>2026-10-31 02:03:56</td></tr>
+    <tr><td>08584081946942189502242834223CU38</td><td><span class="badge">Succeeded</span></td><td>2026-10-31 02:03:11</td></tr>
+  </table>
+  <h2 style="margin-top:24px">Compose_pull_summary output (fetched via Logic Apps run-history REST API)</h2>
+  <div class="mono">{
+  "pulledAtUtc":   "2026-10-31T02:03:58.3074118Z",
+  "windowStart":   "2026-10-24T02:03:57.149Z",
+  "windowEnd":     "2026-10-31T02:03:57.177Z",
+  "hourlyRowCount": "21",
+  "skillsetCount":  "90"
+}</div>
+  <p style="font-size:13px;color:#64748B; margin-top:10px">21 hourly rows and 90 skillsets — same live Security Copilot usage API, same tenant, same numbers the Power BI dashboard shows. No PowerShell process ran during this pull.</p>
+</div>
+
+<div class="note">
+  <b>Note on screenshots:</b> interactive Azure Portal access for this dev tenant requires completing a one-time, device-bound MFA step (passkey / Authenticator enrollment) that needs the account owner physically present — not something to complete unattended on someone's behalf. Everything above was built and verified non-interactively via Azure CLI / ARM / the Logic Apps run-history REST API, which uses the already-established CLI sign-in. Portal designer screenshots can be added after a one-time interactive MFA registration.
+</div>
+
+</body>
+</html>
