@@ -27,7 +27,7 @@ was captured live against the dev tenant; none are mocked up or composited.
 - [Part 2: Write and test the M code](#part-2-write-and-test-the-m-code) (steps 4–5)
 - [Part 3: Move the secret into a Parameter](#part-3-move-the-secret-into-a-parameter) (steps 6–7)
 - [Part 4: Finalize and refresh](#part-4-finalize-and-refresh) (steps 8–9)
-- [Part 5: Load it into the report and visualize](#part-5-load-it-into-the-report-and-visualize) (steps 10–12)
+- [Part 5: Load it into the report and visualize](#part-5-load-it-into-the-report-and-visualize) (steps 10–14)
 - [Lab results](#lab-results)
 - [Good to know](#good-to-know)
 - [Troubleshooting](#troubleshooting)
@@ -399,9 +399,40 @@ builds visuals the same way.
 
 <p align="center"><img src="Steps/step17-table-visual-built.png" alt="Table visual built from real Security Copilot usage data" width="760"><br><sub>The finished table — real hourly usage rows, pulled live from the Security Copilot usage API, with zero PowerShell and zero external services involved from here on. This is the end state the whole walkthrough builds up to.</sub></p>
 
-Every subsequent **Refresh** (ribbon or scheduled, once published to the
-Power BI Service) re-runs Steps 9–10's flow and updates this table with
-whatever the usage API returns at that moment.
+### Step 13: Prove the loop — click Refresh on the report canvas
+
+**Why:** every step so far happened once, by hand. The whole point of this
+approach is that **Home → Refresh** on the main report canvas (not
+**Refresh Preview** inside the editor) re-runs the entire pull — token
+exchange, API call, table reload — with one click and no editor involved.
+This step actually clicks it, rather than just asserting it would work.
+
+1. With the table visual already on the canvas, select **Home → Refresh**.
+2. Power BI re-evaluates `Query1` (and resolves `ScuRefreshToken` again)
+   exactly as Step 9 did, then reloads the visual with whatever the usage
+   API returns at that moment.
+
+<p align="center"><img src="Steps/step18-refresh-clicked.png" alt="Refresh button clicked on the report canvas" width="760"><br><sub><b>Home → Refresh</b>, clicked — the button's focus outline confirms it ran. The table reloads in place; no dialogs, no editor, no PowerShell.</sub></p>
+
+### Step 14: Save your work
+
+1. **Ctrl+S** (or **File → Save**) prompts for a name the first time, since
+   this report started as an unsaved Blank Query session.
+
+<p align="center"><img src="Steps/step19-save-dialog.png" alt="Save this file dialog" width="760"><br><sub>The one-time naming prompt. Everything after this — folder, OneDrive vs. local — is standard Windows/Power BI save behavior, not specific to this walkthrough.</sub></p>
+
+2. Once saved, the title bar switches from <code>Untitled</code> to the
+   file's name, confirming a real <code>.pbix</code> now exists on disk.
+
+<p align="center"><img src="Steps/step20-saved-confirmed.png" alt="Power BI Desktop title bar confirming the file was saved" width="760"><br><sub>Title bar reads the saved file name instead of <code>Untitled</code> — a tangible <code>.pbix</code> deliverable, with the same table visual intact.</sub></p>
+
+> [!CAUTION]
+> This `.pbix` still has the real decrypted refresh token sitting in the
+> `ScuRefreshToken` parameter (see [Good to know](#good-to-know)). It was
+> saved to a local working folder only, deliberately **not** committed to
+> this repository — treat any `.pbix` saved from this walkthrough as a
+> secret, the same way the [Roll back](#roll-back) section already
+> describes.
 
 ---
 
@@ -415,6 +446,8 @@ whatever the usage API returns at that moment.
 | Data-source trust prompts | Two, one-time: Anonymous/Public privacy level for `login.microsoftonline.com` and the usage API host |
 | Close & Apply (Step 10) | **Succeeded** — `Query1` loaded into the report's data model, editor closed automatically |
 | Table visual (Step 12) | **Built successfully** — 4 real columns rendered on the report canvas from the loaded data |
+| Canvas Refresh (Step 13) | **Succeeded** — re-ran end to end from the report canvas itself, no editor involved |
+| Save (Step 14) | **Succeeded** — title bar confirms a real `.pbix` now exists on disk |
 | Anything left running in the background? | **No** — the query only executes when something triggers a refresh |
 
 ## Good to know
@@ -459,9 +492,10 @@ whatever the usage API returns at that moment.
    `ScuRefreshToken` if you're done testing.
 3. Delete `Query1` (right-click in the Data pane → **Delete**) to remove the
    query and its loaded data from the model entirely.
-4. If the `.pbix` was saved with a real token in the parameter, treat that
-   file itself as a secret — don't share it; re-save without the parameter's
-   value first.
+4. The `.pbix` saved in Step 14 has a real token in its parameter — treat
+   that file itself as a secret. Don't share it; re-save without the
+   parameter's value first, or delete the file entirely if you're done
+   testing.
 
 ## Repository layout
 
@@ -471,8 +505,8 @@ Automation-Alternatives/PowerQuery/
 ├── summary.html                 Polished single-page write-up (composite view)
 ├── 00-architecture-and-code.png M code + live result, side by side
 ├── 01-live-data-result.png      Live result, full size
-└── Steps/                       The 17 screenshots and M code referenced above
-    ├── step01 … step17          In the order used throughout this guide
+└── Steps/                       The 20 screenshots and M code referenced above
+    ├── step01 … step20          In the order used throughout this guide
     ├── mcode-placeholder.m       The Step 5 version (inline placeholder token)
     └── mcode-final-parameterized.m   The Step 8 version (references the Parameter)
 ```
