@@ -164,11 +164,14 @@ same constraint the original PowerShell already assumes.
 > **Note on these screenshots:** interactive sign-in to the Azure Portal and
 > the Power Automate Maker portal both hit a one-time, device-bound MFA
 > registration wall that needed the account owner physically present — not
-> something to push through unattended. So unlike Parts 1–2, these aren't
-> portal-click screenshots; they're rendered proof-of-work pages (architecture
-> + live API output) built because the resources themselves were created and
-> verified entirely via CLI/REST instead of the Portal UI. Each links to the
-> underlying ARM template / flow definition / M code.
+> something to push through unattended. So for **Approaches 1 and 2** these
+> aren't portal-click screenshots; they're rendered proof-of-work pages
+> (architecture + live API output) built because the resources themselves
+> were created and verified entirely via CLI/REST instead of the Portal UI.
+> **Approach 3 (Power Query) hit no such wall** — it runs entirely inside
+> Power BI Desktop, so it has a full, genuine click-by-click screenshot
+> walkthrough instead; see its section below. Each links to the underlying
+> ARM template / flow definition / M code.
 
 ### Approach 1 — Azure Logic App ([ARM template](Automation-Alternatives/LogicApp/azuredeploy.json))
 
@@ -192,6 +195,11 @@ code calls the SCU API directly via `Web.Contents()`, so Power BI's own
 **Refresh** button is the whole automation.
 
 ![Power Query M code and live result](Automation-Alternatives/PowerQuery/00-architecture-and-code.png)
+
+This one also has a full **12-step click-by-click screenshot walkthrough**:
+[`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) —
+Blank Query → Advanced Editor → Manage Parameters (moving the refresh token
+out of the M code into a Parameter) → a live Refresh Preview.
 
 See [`AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
 for the full comparison table and tradeoffs. Each approach's `summary.html`

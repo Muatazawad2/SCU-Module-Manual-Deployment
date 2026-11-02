@@ -77,7 +77,7 @@ click involved. Manually triggered afterward and confirmed `Succeeded` with
 
 ## Approach 3 — Native Power Query (M)
 
-**[Full write-up →](PowerQuery/summary.html)**
+**[Full write-up →](PowerQuery/summary.html)** · **[Click-by-click screenshot walkthrough →](PowerQuery/STEP-BY-STEP.md)**
 
 The cleanest option for Power BI specifically: skip the external
 puller entirely. A Blank Query's M code does the refresh-token exchange and
@@ -93,6 +93,13 @@ Built, pasted into the Advanced Editor, resolved the two expected one-time
 data-source trust prompts (Anonymous + Public privacy level for both
 `login.microsoftonline.com` and the SCU API host), and refreshed successfully:
 **10 columns, 21 rows**, live tenant data.
+
+**Unlike Approaches 1 and 2, this one has a genuine portal-click screenshot
+trail** — [`STEP-BY-STEP.md`](PowerQuery/STEP-BY-STEP.md) walks all 12 steps
+with real screenshots: Blank Query → Advanced Editor → the inline-token
+version failing as expected on a placeholder → switching to a **Power Query
+Parameter** so the token never sits in the M code → the final parameterized
+query → a live Refresh Preview returning real tenant data.
 
 ---
 
