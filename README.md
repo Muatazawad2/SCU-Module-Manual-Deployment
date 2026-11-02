@@ -196,10 +196,11 @@ code calls the SCU API directly via `Web.Contents()`, so Power BI's own
 
 ![Power Query M code and live result](Automation-Alternatives/PowerQuery/00-architecture-and-code.png)
 
-This one also has a full **12-step click-by-click screenshot walkthrough**:
+This one also has a full **17-step click-by-click screenshot walkthrough**:
 [`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) —
 Blank Query → Advanced Editor → Manage Parameters (moving the refresh token
-out of the M code into a Parameter) → a live Refresh Preview.
+out of the M code into a Parameter) → a live Refresh Preview → **Close &
+Apply** → a real table visual built from that live data.
 
 See [`AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
 for the full comparison table and tradeoffs. Each approach's `summary.html`

@@ -7,7 +7,9 @@
 A genuine, click-by-click screenshot walkthrough of replacing `SCU-Run.ps1`'s
 data-pull stage with a single **Blank Query** inside Power BI Desktop. No
 Logic App, no Power Automate, no Azure resource, no landing-zone file —
-Power BI's own **Refresh** button *is* the automation. Every screenshot below
+Power BI's own **Refresh** button *is* the automation. It goes all the way
+through **Close & Apply** and a real **table visual** built from the live
+result, not just a preview grid inside the editor. Every screenshot below
 was captured live against the dev tenant; none are mocked up or composited.
 
 > [!IMPORTANT]
@@ -25,6 +27,7 @@ was captured live against the dev tenant; none are mocked up or composited.
 - [Part 2: Write and test the M code](#part-2-write-and-test-the-m-code) (steps 4–5)
 - [Part 3: Move the secret into a Parameter](#part-3-move-the-secret-into-a-parameter) (steps 6–7)
 - [Part 4: Finalize and refresh](#part-4-finalize-and-refresh) (steps 8–9)
+- [Part 5: Load it into the report and visualize](#part-5-load-it-into-the-report-and-visualize) (steps 10–12)
 - [Lab results](#lab-results)
 - [Good to know](#good-to-know)
 - [Troubleshooting](#troubleshooting)
@@ -334,9 +337,71 @@ evaluation time, the same way it resolves any other query's name.
 <p align="center"><img src="Steps/step12-live-data-result.png" alt="Live data result — 10 columns, 20 rows" width="760"><br><sub><b>10 columns, 20 rows</b> of real hourly usage aggregates, with real timestamps through the current date. <b>PREVIEW DOWNLOADED AT 6:23 PM</b> (bottom-right) confirms this is a live result, not cached.</sub></p>
 
 From here, **Close & Apply** loads the query into the report's data model
-like any other source. Every subsequent **Refresh** on the report canvas
+like any other source, and every subsequent **Refresh** on the report canvas
 repeats this exact flow — no external moving parts, no landing-zone file,
-nothing running in the background between refreshes.
+nothing running in the background between refreshes. Part 5 below actually
+clicks **Close & Apply** and builds a visual from the result, so there's no
+ambiguity about what the finished state looks like.
+
+---
+
+## Part 5: Load it into the report and visualize
+
+### Step 10: Close & Apply
+
+**Why:** everything up to now happened inside the **Power Query Editor**,
+which is a staging area — its "Preview" never touches the report itself.
+**Close & Apply** is the one action that commits the query into the report's
+data model, closes the editor, and returns you to the report canvas.
+
+1. **Home → Close & Apply** is also a split button. Selecting the main
+   (left) part runs **Close & Apply** directly; the dropdown arrow exposes
+   **Apply** (load without closing the editor) and **Close** (discard
+   without loading) as well.
+
+<p align="center"><img src="Steps/step13-close-and-apply-menu.png" alt="Close & Apply split-button menu" width="760"><br><sub><b>Home → Close & Apply</b>. The three options shown are <b>Close & Apply</b> (commit and close), <b>Apply</b> (commit and stay open), and <b>Close</b> (discard).</sub></p>
+
+2. Power BI shows a **Load** dialog while it evaluates the query and any
+   parameters one more time before committing the result to the model.
+
+<p align="center"><img src="Steps/step14-apply-loading.png" alt="Load progress dialog" width="760"><br><sub>The one-time <b>Load</b> dialog — <code>Query1: Evaluating…</code> — this is the same M code run as Step 9's Refresh Preview, just loading into the model instead of the editor's preview grid.</sub></p>
+
+### Step 11: Confirm the query landed in the report
+
+Once loading finishes, the Power Query Editor window closes on its own and
+you're back on the report canvas, with `Query1` now listed in the **Data**
+pane on the right.
+
+<p align="center"><img src="Steps/step15-report-canvas-query-loaded.png" alt="Report canvas with Query1 in the Data pane" width="760"><br><sub>Back on the report canvas. <code>Query1</code> appears in the <b>Data</b> pane — the editor is gone, and the canvas is ready for a visual.</sub></p>
+
+Expand `Query1` in the Data pane to see all 10 columns the query returns.
+Only field **names** are listed here — `ScuRefreshToken` doesn't appear at
+all, because Parameters aren't part of the data model; they exist only
+inside Power Query itself.
+
+<p align="center"><img src="Steps/step16-fields-list-expanded.png" alt="Query1 fields expanded in the Data pane" width="760"><br><sub>All 10 columns from the usage API response, ready to use in any visual: <code>aggregateStartTime</code>, <code>assignedCapacity</code>, <code>isOverageOrRollover</code>, <code>maxAllowedCapacity</code>, <code>overageLimit</code>, <code>overageSCUUsed</code>, <code>overageState</code>, <code>provisionedSCUUsed</code>, <code>unbilledSCUUsed</code>, <code>usedCapacity</code>.</sub></p>
+
+### Step 12: Build a visual from the real data
+
+**Why:** this is the actual point of pulling the data in the first place —
+a visual on the report canvas is what a report reader sees. Nothing about
+this step is specific to this data source; any table loaded into the model
+builds visuals the same way.
+
+1. With no visual selected, checking a field's box in the Data pane creates
+   a new **Table** visual automatically and adds that field as a column.
+   Checking further boxes adds more columns to the same visual.
+2. For this walkthrough, four columns were added: `aggregateStartTime`,
+   `usedCapacity`, `assignedCapacity`, `provisionedSCUUsed`.
+3. The default visual size is small — **Format visual → General →
+   Properties → Size** has explicit **Height**/**Width** fields if you'd
+   rather type exact values than drag the resize handles.
+
+<p align="center"><img src="Steps/step17-table-visual-built.png" alt="Table visual built from real Security Copilot usage data" width="760"><br><sub>The finished table — real hourly usage rows, pulled live from the Security Copilot usage API, with zero PowerShell and zero external services involved from here on. This is the end state the whole walkthrough builds up to.</sub></p>
+
+Every subsequent **Refresh** (ribbon or scheduled, once published to the
+Power BI Service) re-runs Steps 9–10's flow and updates this table with
+whatever the usage API returns at that moment.
 
 ---
 
@@ -348,6 +413,8 @@ nothing running in the background between refreshes.
 | Real token via Parameter (Step 9) | **Succeeded** — `10 columns, 20 rows` returned |
 | Data freshness | Real hourly timestamps through the current date (rolling 7-day window) |
 | Data-source trust prompts | Two, one-time: Anonymous/Public privacy level for `login.microsoftonline.com` and the usage API host |
+| Close & Apply (Step 10) | **Succeeded** — `Query1` loaded into the report's data model, editor closed automatically |
+| Table visual (Step 12) | **Built successfully** — 4 real columns rendered on the report canvas from the loaded data |
 | Anything left running in the background? | **No** — the query only executes when something triggers a refresh |
 
 ## Good to know
@@ -387,10 +454,12 @@ nothing running in the background between refreshes.
 
 ## Roll back
 
-1. **Home → Manage Parameters → Edit Parameters**, clear or delete
+1. Delete the table visual from the report canvas (select it → **Delete**).
+2. **Home → Manage Parameters → Edit Parameters**, clear or delete
    `ScuRefreshToken` if you're done testing.
-2. Delete `Query1` (right-click → **Delete**) to remove the query entirely.
-3. If the `.pbix` was saved with a real token in the parameter, treat that
+3. Delete `Query1` (right-click in the Data pane → **Delete**) to remove the
+   query and its loaded data from the model entirely.
+4. If the `.pbix` was saved with a real token in the parameter, treat that
    file itself as a secret — don't share it; re-save without the parameter's
    value first.
 
@@ -402,8 +471,8 @@ Automation-Alternatives/PowerQuery/
 ├── summary.html                 Polished single-page write-up (composite view)
 ├── 00-architecture-and-code.png M code + live result, side by side
 ├── 01-live-data-result.png      Live result, full size
-└── Steps/                       The 12 screenshots and M code referenced above
-    ├── step01 … step12          In the order used throughout this guide
+└── Steps/                       The 17 screenshots and M code referenced above
+    ├── step01 … step17          In the order used throughout this guide
     ├── mcode-placeholder.m       The Step 5 version (inline placeholder token)
     └── mcode-final-parameterized.m   The Step 8 version (references the Parameter)
 ```
@@ -418,6 +487,8 @@ Automation-Alternatives/PowerQuery/
 - [`Json.Document` — Power Query M reference](https://learn.microsoft.com/powerquery-m/json-document)
 - [Power Query M function reference (full index)](https://learn.microsoft.com/powerquery-m/power-query-m-function-reference)
 - [Data refresh in Power BI](https://learn.microsoft.com/power-bi/connect-data/refresh-data)
+- [Create and format table visualizations in Power BI](https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-tables)
+- [Format pane General tab overview (Size/Position properties)](https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-format-pane-overview)
 
 ---
 

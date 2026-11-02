@@ -95,11 +95,12 @@ data-source trust prompts (Anonymous + Public privacy level for both
 **10 columns, 21 rows**, live tenant data.
 
 **Unlike Approaches 1 and 2, this one has a genuine portal-click screenshot
-trail** — [`STEP-BY-STEP.md`](PowerQuery/STEP-BY-STEP.md) walks all 12 steps
+trail** — [`STEP-BY-STEP.md`](PowerQuery/STEP-BY-STEP.md) walks all 17 steps
 with real screenshots: Blank Query → Advanced Editor → the inline-token
 version failing as expected on a placeholder → switching to a **Power Query
 Parameter** so the token never sits in the M code → the final parameterized
-query → a live Refresh Preview returning real tenant data.
+query → a live Refresh Preview returning real tenant data → **Close & Apply**
+→ a real table visual built on the report canvas from that live data.
 
 ---
 
