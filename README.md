@@ -5,6 +5,14 @@ This is a screenshot-illustrated re-run of the **SCU Module**'s manual setup
 tenant instead of running `SCU-Setup.ps1`. Every click below was done live in
 the Entra admin center and verified against Microsoft Graph afterward.
 
+> [!NOTE]
+> **These are generic, repeatable steps — follow them in your own tenant.**
+> The tenant ID, app name, Client ID, Object ID, and every number or
+> screenshot below came from one illustrative run in a dev/sandbox tenant.
+> Registering this same app in *your* tenant produces different GUIDs and
+> a different sign-in account — only the sequence of steps is what you
+> should expect to match.
+
 ## Why this part comes first
 
 Every later part — Part 2's dashboard, Part 3's three automation approaches,
@@ -43,7 +51,7 @@ the rest of the repo authenticates as.
 > time with real error screenshots, and documents a custom-connector dead end
 > root-caused to a Microsoft Store/MSIX platform limitation.
 
-## Environment used for this run
+## Example environment from this walkthrough (yours will differ)
 
 | Item | Value |
 | --- | --- |

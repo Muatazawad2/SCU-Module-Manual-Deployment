@@ -1,10 +1,16 @@
-# SCU Module — Automating the Data Pull Without PowerShell
+# SCU Module — Part 3: Automating the Data Pull Without PowerShell
 
 Three ways to replace `SCU-Run.ps1`'s data-pull stage, each tried live against
-the same dev tenant and the same undocumented Security Copilot usage API.
+a dev/sandbox tenant and the same undocumented Security Copilot usage API —
+all three are generic, reusable patterns you can point at your own tenant.
 See [`README.md`](README.md) for the Entra app walkthrough and
 [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) for the dashboard itself —
 this document covers *what pulls the data instead of the script*.
+
+> [!NOTE]
+> The tenant, resource names, row counts, and screenshots below are from one
+> illustrative run — the architecture and steps for each approach are what
+> transfers to your own tenant; the exact numbers and resource names won't.
 
 **Shared starting point for all three:** the `SCU-Usage-Puller` app from
 [Part 1](README.md), and its already-obtained delegated refresh token

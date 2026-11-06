@@ -9,8 +9,14 @@ data-pull stage with a single **Blank Query** inside Power BI Desktop. No
 Logic App, no Power Automate, no Azure resource, no landing-zone file —
 Power BI's own **Refresh** button *is* the automation. It goes all the way
 through **Close & Apply** and a real **table visual** built from the live
-result, not just a preview grid inside the editor. Every screenshot below
-was captured live against the dev tenant; none are mocked up or composited.
+result, not just a preview grid inside the editor.
+
+> [!NOTE]
+> **These are generic steps — every click here works the same way in any
+> tenant.** The screenshots were captured live against one dev/sandbox
+> tenant, and the specific row counts, column values, and IDs shown are from
+> that one run; none are mocked up or composited, but your own tenant will
+> return different (and likely larger) numbers through the exact same steps.
 
 > [!IMPORTANT]
 > This is a proof of concept, not a hardened production pattern. The refresh
@@ -448,6 +454,14 @@ wall hit and root-caused one failure mode at a time, and a dead end hit
 along the way: an attempt to replace the ad-hoc queries with a proper
 custom Power Query connector, which turned out to be impossible on this
 specific Power BI Desktop installation for a reason worth recording.
+
+> [!NOTE]
+> The architecture and every credential-type failure mode below are generic
+> — they'll reproduce in any tenant using this same ad-hoc `Web.Contents`
+> pattern. The row counts (31 Daily rows, etc.) and the Microsoft Store/MSIX
+> finding in Step 21 are specific to this one run and this one machine's
+> Power BI Desktop install — check your own install edition before assuming
+> Step 21 applies to you.
 
 > [!IMPORTANT]
 > This section never shows a real refresh token, and the `.pbix` itself is

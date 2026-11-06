@@ -1,9 +1,17 @@
-# SCU Module — Power BI Usage Dashboard (Dev Tenant Run + Redesign)
+# SCU Module — Part 2: Power BI Usage Dashboard (Pull Data + Redesign)
 
 This is Part 2 of the manual walkthrough: using the **`SCU-Usage-Puller`** app
 registered in [Part 1](README.md) to pull real Security Copilot usage data
-from the dev tenant, then loading and redesigning the dashboard template from
-the public repo.
+from your tenant, then loading and redesigning the dashboard template from
+the public repo. (Screenshots below are from one example run in a dev tenant.)
+
+> [!NOTE]
+> **These are generic, repeatable steps — follow them in your own tenant with
+> your own app registration.** The usage numbers, row counts, and screenshots
+> below are from one illustrative run against a low-activity dev/sandbox
+> tenant. Running this against your own tenant will pull *your* usage data
+> and produce different totals — the steps and the fix in Step 2 apply
+> regardless of what your numbers turn out to be.
 
 **Repository reference:** <https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module>
 
@@ -13,7 +21,7 @@ the public repo.
 PowerBI/
   SCU-Dashboard-Light.pbit   ← redesigned template (light theme, bug-fixed queries)
   Images/
-    01-cover-page.png           ← Cover — 8 KPI cards, live dev-tenant data
+    01-cover-page.png           ← Cover — 8 KPI cards, live data from the example tenant
     02-guide-page.png           ← Guide — definitions/glossary
     03-overview-page.png        ← Overview — daily trend, by-user, by-plugin
     04-sessions-page.png        ← Sessions — filterable interaction log
@@ -33,12 +41,12 @@ PowerBI/
 
 ## Step 1 — Pull usage data with the registered app
 
-Using the `SCU-Usage-Puller` app (Client ID `72bb0a2b-c028-4a0f-bb57-78a81db6fc18`)
-from Part 1, and the existing **"SecCo"** Security Copilot capacity in the dev
-subscription:
+Using the `SCU-Usage-Puller` app registered in Part 1 (Client ID shown there
+is this walkthrough's example — substitute your own app's Client ID), and
+your tenant's Security Copilot capacity name (`"SecCo"` in this example):
 
 ```powershell
-.\SCU-Setup.ps1 -AppId 72bb0a2b-c028-4a0f-bb57-78a81db6fc18 -Capacity "SecCo"
+.\SCU-Setup.ps1 -AppId <your-app-client-id> -Capacity "<your-capacity-name>"
 ```
 
 This triggers a **device-code sign-in** (open `https://microsoft.com/devicelogin`,
@@ -62,9 +70,9 @@ Then pull the actual usage data (last 90 days) and build the report:
 
 This calls the Security Copilot portal API + Azure Cost Management, writes
 `SCU-Report.xlsx` / `.json`, and regenerates `SCU-Dashboard.pbit` / `.html`.
-In this dev tenant the run completed with:
+In **this example run's** dev tenant, the run completed with:
 
-| Metric | Value |
+| Metric | Value (this example run — yours will differ) |
 | --- | --- |
 | Total SCU (90 days) | 40.78 |
 | Total sessions | 321 |
@@ -73,9 +81,11 @@ In this dev tenant the run completed with:
 | Anomaly days (>2σ) | 4 |
 
 Two sub-endpoints (session catalog, promptbooks) returned **HTTP 500** for
-this tenant — expected for a low-activity dev/trial tenant — which left the
-`SessionCatalog`, `Promptbooks`, and `PromptbookPrompts` tables empty/partial
-in the generated report. That surfaced a real bug in the template (next step).
+this tenant — expected for a low-activity dev/trial tenant. A busier,
+production tenant may not hit this at all; the fix in Step 2 below is
+needed only if you do. It left the `SessionCatalog`, `Promptbooks`, and
+`PromptbookPrompts` tables empty/partial in the generated report, which
+surfaced a real bug in the template (next step).
 
 ---
 
@@ -140,7 +150,7 @@ page: blue `#0078D4`, purple `#6D28D9`, green `#047857`, amber `#B45309`,
 ...). A full-text scan of the saved layout afterward confirmed zero
 remaining instances of the old dark-card colors anywhere in the report.
 
-### Result — all 10 pages, light mode, live dev-tenant data
+### Result — all 10 pages, light mode, live data (this example run)
 
 **Cover**
 
@@ -174,8 +184,9 @@ remaining instances of the old dark-card colors anywhere in the report.
 
 ![Plugin Catalog page](PowerBI/Images/08-plugin-catalog-page.png)
 
-**Promptbooks** *(blank — this tenant's promptbooks API returned HTTP 500;
-see Step 1/2 above — the page renders cleanly instead of crashing the report)*
+**Promptbooks** *(blank in this example — this tenant's promptbooks API
+returned HTTP 500; see Step 1/2 above — the page renders cleanly instead of
+crashing the report. Your tenant may return real promptbook data instead.)*
 
 ![Promptbooks page](PowerBI/Images/09-promptbooks-page.png)
 
