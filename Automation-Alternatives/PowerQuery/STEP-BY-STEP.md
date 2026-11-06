@@ -473,6 +473,10 @@ This step actually clicks it, rather than just asserting it would work.
   (client-credentials) token was tested against the same endpoints and
   rejected outright — see
   [`AUTOMATION-COMPARISON.md`](../AUTOMATION-COMPARISON.md) for that result.
+- **Want to go past one proof table to a full dashboard?** See
+  [`LIVE-DASHBOARD.md`](LIVE-DASHBOARD.md) (Part 4) — it scales this exact
+  pattern to a 3-table live dashboard and documents a custom-connector dead
+  end root-caused to a Microsoft Store/MSIX platform limitation.
 
 ## Troubleshooting
 

@@ -15,6 +15,11 @@ the Entra admin center and verified against Microsoft Graph afterward.
 > replaces `SCU-Run.ps1`'s data pull with a Logic App, a Power Automate flow,
 > and native Power Query — all three tried live against this tenant, proof
 > screenshots below.
+>
+> **Part 4 available:** [`Automation-Alternatives/PowerQuery/LIVE-DASHBOARD.md`](Automation-Alternatives/PowerQuery/LIVE-DASHBOARD.md)
+> scales Part 3's single-table Power Query proof of concept up to a full
+> 3-table live dashboard, including a custom-connector dead end root-caused
+> to a Microsoft Store/MSIX platform limitation.
 
 ## Environment used for this run
 
