@@ -28,6 +28,7 @@ was captured live against the dev tenant; none are mocked up or composited.
 - [Part 3: Move the secret into a Parameter](#part-3-move-the-secret-into-a-parameter) (steps 6–7)
 - [Part 4: Finalize and refresh](#part-4-finalize-and-refresh) (steps 8–9)
 - [Part 5: Load it into the report and visualize](#part-5-load-it-into-the-report-and-visualize) (steps 10–14)
+- [Part 6: Scaling to a full 3-table live dashboard](#part-6-scaling-to-a-full-3-table-live-dashboard) (steps 15–22)
 - [Lab results](#lab-results)
 - [Good to know](#good-to-know)
 - [Troubleshooting](#troubleshooting)
@@ -436,6 +437,245 @@ This step actually clicks it, rather than just asserting it would work.
 
 ---
 
+## Part 6: Scaling to a full 3-table live dashboard
+
+Steps 1–14 above proved the pattern with **one** Blank Query and a 7-day
+Hourly pull. This part documents scaling that same pattern to drive **all
+three core tables** (`Hourly`, `Sessions`, `Daily`) of a real multi-page
+dashboard (`SCU-Dashboard-LiveAPI.pbix`) that had previously loaded those
+tables from a static `SCU-Report.xlsx` export — plus a genuine credential
+wall hit and root-caused one failure mode at a time, and a dead end hit
+along the way: an attempt to replace the ad-hoc queries with a proper
+custom Power Query connector, which turned out to be impossible on this
+specific Power BI Desktop installation for a reason worth recording.
+
+> [!IMPORTANT]
+> This section never shows a real refresh token, and the `.pbix` itself is
+> not committed to this repo. Every screenshot below was taken from
+> Table/Report view and Power BI's own **Access Web content** credential
+> dialog with the Advanced Editor and DAX/M panes closed, specifically to
+> avoid ever capturing the token. The one tenant identifier visible in two
+> screenshots (the Entra **Tenant ID**) is already published in plain text
+> in [`README.md`](../../README.md)'s environment table — it is not a
+> secret. The one M code file included here
+> ([`SCUDashboard-connector.pq`](Steps/SCUDashboard-connector.pq)) takes its
+> token from a Power BI credential prompt at runtime
+> (`Extension.CurrentCredential()`) and contains no secret value at all.
+
+### Goal
+
+Convert `SCU-Dashboard-LiveAPI.pbix`'s three core tables from a static,
+point-in-time `SCU-Report.xlsx` export to live, direct-API Power Query
+sources — so opening the file and clicking **Refresh** pulls current
+Security Copilot usage data straight from the tenant, the same way Steps
+1–14 above did with one table, but feeding a full dashboard instead of one
+proof table.
+
+### Architecture — one pattern, three endpoints
+
+| Table | Endpoint | Shape | Notes |
+|---|---|---|---|
+| `Hourly` | `/aggregates/hourly` | Single call, 30-day window | Same call shape as the Part 1–5 proof query. |
+| `Sessions` | `/aggregates/dimensional` | **Paginated** (`pageSize: 200`), `List.Generate` loop until a page comes back empty | Per-session rows: user, plugins/skills used, category, status, cost. |
+| `Daily` | `/aggregates/dimensional` | Same paginated pull as `Sessions`, then **grouped by calendar day** | Produces `Day`, `SCU_Total`, `Overage_SCU`, `Hours_Active`, rolling 7-/30-day averages, day-over-day deltas, and a simple anomaly flag. |
+
+All three authenticate the same way: a stored delegated refresh token is
+traded for a short-lived access token via `grant_type=refresh_token`
+against `https://login.microsoftonline.com/<TenantId>/oauth2/v2.0/token`,
+requesting the `Purview.DelegatedAccess` scope — identical to
+`SCU-Setup.ps1` / `SCU-Run.ps1` and to Steps 1–14.
+
+### Step 15: Hourly and Sessions converted cleanly
+
+Both queries followed the same recipe as Steps 1–14 (`Web.Contents` →
+`Json.Document` → `Table.FromRecords` → typed/renamed columns), with
+`Sessions` additionally needing the `List.Generate` pagination loop from the
+[architecture table](#architecture--one-pattern-three-endpoints) above,
+since `/aggregates/dimensional` caps each response at 200 rows. Both
+refreshed cleanly once a credential was accepted for their shared API host.
+
+### Step 16: Data source settings — one prompt per host, not per query
+
+**Why:** Power BI's generic data-source credential gate is a separate layer
+from the M code itself. It tracks one entry **per exact URL** a query calls
+— independent of how many queries share that URL, and independent of
+whatever the M code does internally (including this file's pattern of
+building its own `Authorization: Bearer <token>` header by hand inside
+`Web.Contents`). **File → Options and settings → Data source settings**
+lists every URL the file has ever called and lets you inspect or clear its
+stored credential one at a time.
+
+<p align="center"><img src="Steps/step21-datasource-settings-three-sources.png" alt="Data source settings dialog listing three web data sources" width="760"><br><sub><b>Data source settings</b> — three entries for this file: the Entra token endpoint, the <code>aggregates/dimensional</code> endpoint (<code>Sessions</code> + <code>Daily</code>), and the <code>aggregates/hourly</code> endpoint. Clearing one entry's permission only affects queries that call that exact URL.</sub></p>
+
+### Step 17: Web API + Key — looks right, fails structurally
+
+**Why this was tried first:** the **Web API** credential type's **Key**
+field looks like the obvious match for "paste a token-shaped value in a
+box". It isn't, for this M code specifically — and the error below is
+consistent and structural, not a typo or a one-off glitch.
+
+1. Triggering a refresh with no stored credential for the
+   `aggregates/dimensional` host opens Power BI's **Access Web content**
+   dialog.
+2. Choosing the **Web API** tab and typing any value into **Key**, then
+   clicking **Connect**, fails every time with the same message.
+
+<p align="center"><img src="Steps/step22-webapi-key-structural-error.png" alt="Web API credential type rejecting a key with an ApiKeyName error" width="760"><br><sub><b>"A web API key can only be specified when a web API key name is provided."</b> This credential type only works when the M code itself declares an <code>ApiKeyName</code> option on <code>Web.Contents</code> so Power BI knows which header/query-string parameter to inject the key into. This file's ad-hoc <code>Web.Contents</code> calls never declare one, by design — the Bearer header is already built by hand — so no value typed here will ever satisfy this credential type.</sub></p>
+
+### Step 18: Anonymous — rejected by the API's own preflight check
+
+**Why this was tried next:** "Anonymous" tells Power BI *not* to inject any
+credential of its own, which sounds like the right fit for a query that
+already builds its own auth header. The nuance is that Power BI still runs
+a bare connectivity check against the data source before it will save that
+choice — and that check carries no custom headers at all.
+
+<p align="center"><img src="Steps/step23-anonymous-auth-rejected.png" alt="Anonymous credential type rejected with a could not authenticate error" width="760"><br><sub><b>"We couldn't authenticate with the credentials provided."</b> The real usage API legitimately requires the Bearer token this file's M code builds by hand — a bare, header-less preflight request against the same host is correctly rejected. This isn't a bug in the query; it's Power BI validating a credential type before trusting it, using a plainer request than the query's own.</sub></p>
+
+### Step 19: Organizational account — needs a live interactive sign-in
+
+**Why this was tried last among the automatic options:** it's the one
+credential type most likely to be genuinely valid for a Microsoft-hosted
+API. The catch is what "valid" means here — it hands off to a real,
+interactive Microsoft Entra sign-in flow, not this file's existing
+refresh-token exchange.
+
+<p align="center"><img src="Steps/step24-organizational-account-signin-wall.png" alt="Organizational account credential type showing a Sign in button" width="760"><br><sub><b>"You aren't signed in"</b> with a <b>Sign in</b> button. This path is correct for connectors that want Power BI to manage a fresh AAD session on your behalf — it isn't what this API wants either way, since the M code already carries its own delegated token end to end.</sub></p>
+
+### Step 20: Side quest — building a real custom connector
+
+Rather than keep working through the generic credential dialog's options,
+the next move was to do this properly: a genuine Power Query **custom
+connector** (`SCUDashboard.pq` → compiled to `SCUDashboard.mez`) exposing
+`Hourly` and `Sessions` as native navigation-table entries under **Get
+Data**, with its own first-class **Key** credential type — so Power BI
+handles the one-time credential prompt itself, the same way it does for any
+built-in connector, instead of the raw `Web.Contents` ad-hoc flow.
+
+The connector source is included here as a reusable reference artifact:
+[`SCUDashboard-connector.pq`](Steps/SCUDashboard-connector.pq). It contains
+**zero secrets** — the refresh token is never inlined; it's read at runtime
+from whatever the user types into Power BI's own credential dialog
+(`Extension.CurrentCredential()[Key]`), which is the architecturally
+"right" way to do this and strictly more secure than both the ad-hoc
+`Web.Contents` pattern and the [Parameter pattern](#part-3-move-the-secret-into-a-parameter)
+from Steps 1–14.
+
+Build/placement checklist followed:
+
+- [x] `.mez` built and placed in `%USERPROFILE%\Documents\Power BI Desktop\Custom Connectors\`.
+- [x] File verified as a structurally valid zip containing the compiled `.pq`.
+- [x] **File → Options → Security → "Allow any extension to load without
+      validation or warning"** confirmed enabled (required for *any*
+      unsigned custom connector to even be considered).
+- [x] Power BI Desktop fully restarted after placing the file.
+- [ ] Connector never appeared searching **Get Data** for "Security Copilot"
+      or browsing the **Other** category — with **zero** errors, warnings,
+      or log entries anywhere.
+
+### Step 21: Root cause — the Microsoft Store edition can't load it
+
+No combination of settings fixed it, because the real cause wasn't a
+setting. Checking how Power BI Desktop is installed on this machine:
+
+```powershell
+Get-AppxPackage -Name "*PowerBI*" | Select-Object Name, PackageFullName, InstallLocation
+```
+
+```
+Name            : Microsoft.MicrosoftPowerBIDesktop
+PackageFullName : Microsoft.MicrosoftPowerBIDesktop_2.160.579.0_x64__8wekyb3d8bbwe
+InstallLocation : C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.160.579.0_x64__8wekyb3d8bbwe
+```
+
+This is the **Microsoft Store (MSIX/AppX) edition**. That edition runs in a
+Store app sandbox that **cannot load unsigned custom `.mez` connectors at
+all** — a hard platform limitation enforced by Store packaging policy, not
+documented anywhere inside the Power BI UI itself, and completely
+independent of the "allow any extension" security setting (that setting
+only matters for the separate, standalone/MSI-installed edition of Power BI
+Desktop, downloaded directly from microsoft.com rather than the Store).
+That fully explains every symptom observed: a correctly built, correctly
+placed, structurally valid connector that silently never appears, with
+nothing to debug because nothing is actually attempting to load it.
+
+**Takeaway for next time:** custom connectors on this machine require
+uninstalling the Store edition and installing the standalone MSI edition of
+Power BI Desktop instead. The connector source above is kept exactly for
+that future possibility — it needs no changes to work once run on an
+edition that supports it.
+
+### Step 22: Resolution — one real credential entry per host, then it sticks
+
+With the connector path closed off, the fix for `Daily`/`Sessions` turned
+out to be the generic credential dialog after all — just with the right
+expectation set by Steps 17–19 above: of the five tabs in **Access Web
+content** (Anonymous, Windows, Basic, Web API, Organizational account),
+only the ones that actually match how the real API authenticates can
+succeed, and the dialog's own "Select which level to apply these settings
+to" dropdown matters too — it defaults to the bare host, and that's the
+scope Power BI remembers the choice against. Once **one** credential entry
+for a host is accepted, Power BI trusts that host for every query that
+calls it going forward — a plain **Refresh**, with no further prompts,
+works exactly like it already did for `Hourly`.
+
+<p align="center"><img src="Steps/step25-daily-table-live-31-rows.png" alt="Daily table in Table view with 31 rows of live data" width="760"><br><sub><b>Daily</b> table in Table view — 31 rows, real dates and SCU figures, pulled live from the usage API.</sub></p>
+
+<p align="center"><img src="Steps/step26-report-view-all-tables-present.png" alt="Report view with Data pane showing all three tables" width="760"><br><sub>Report view — <b>Daily</b>, <b>Hourly</b>, and <b>Sessions</b> all present in the Data pane, no "incomplete data" banner.</sub></p>
+
+### Part 6 results
+
+| Check | Result |
+|---|---|
+| `Hourly` refresh | **Succeeded** — converted cleanly once its host's credential was accepted |
+| `Sessions` refresh | **Succeeded** — paginated pull, shares `Daily`'s host and credential |
+| Web API + Key | **Fails structurally** — "A web API key can only be specified when a web API key name is provided" (Step 17); this M code never declares `ApiKeyName`, so no key value fixes it |
+| Anonymous | **Rejected** — "We couldn't authenticate with the credentials provided" (Step 18); the API's own preflight check requires the Bearer header this credential type doesn't send |
+| Organizational account | **Blocked on automation** — requires a live interactive Entra sign-in (Step 19), not this file's existing token exchange |
+| Custom connector (`.mez`) | **Blocked** — Microsoft Store/MSIX edition can't load unsigned connectors (root-caused, not fixed; see [Step 21](#step-21-root-cause--the-microsoft-store-edition-cant-load-it)) |
+| `Daily` refresh | **Succeeded** after Step 22 — 31 rows, in-memory data confirmed intact throughout |
+| Full model refresh | **Succeeded** — all 3 tables, no errors |
+| "Incomplete data" banner | **Gone** — confirmed via Report view |
+
+#### Good to know (Part 6)
+
+- **The live dashboard's queries currently inline the refresh token**, the
+  same way Step 5's placeholder does — they were **not** migrated to the
+  [Parameter pattern](#part-3-move-the-secret-into-a-parameter), let alone
+  the connector's credential-prompt pattern (which is better than both).
+  That's a real security gap worth closing: at minimum, move the token into
+  a Power Query Parameter like Steps 1–14 do; ideally, revisit the custom
+  connector once run on an edition of Power BI Desktop that can load it.
+  Either way, **don't share this `.pbix` file as-is** — it has a live
+  secret baked into its query definitions in plain text.
+- **Power BI's data-source credential gate is generic, not query-aware.**
+  It doesn't know this file's M code builds its own Bearer header — it only
+  knows "does *something* work for this exact host", using whichever test
+  that credential type performs. That's why three different credential
+  types failed three different ways instead of one single error.
+- **"No errors anywhere" is itself a diagnostic signal.** When a correctly
+  built, correctly placed extension produces literally zero trace of itself
+  trying (and failing) to load, that's a strong hint the platform isn't
+  attempting to load it at all — worth checking the install edition before
+  assuming a config or code problem.
+- **A query that looks structurally identical to a working one can still
+  hit a different credential state.** `Daily` and `Sessions` call the same
+  endpoint with the same auth — the only difference is which one had
+  already earned a one-time host-level credential trust in this file.
+
+#### Troubleshooting (Part 6)
+
+| Symptom | Likely cause and fix |
+|---|---|
+| `A web API key can only be specified when a web API key name is provided` | The M code's `Web.Contents` call never declares an `ApiKeyName` option. This credential type cannot work for this query shape — try Anonymous or Organizational account instead, or add `ApiKeyName` to the M code if you want Web API + Key to be the long-term pattern. |
+| `We couldn't authenticate with the credentials provided` on Anonymous | The real API requires an `Authorization` header that Anonymous's bare preflight check doesn't send. Confirm the host is actually reachable with a valid Bearer token (e.g. via a REST client) before assuming the query itself is broken. |
+| Organizational account shows "You aren't signed in" | Expected — this credential type always requires a real, interactive AAD sign-in. Not suitable for unattended/automated credential setup; use it only when a person is available to click through once. |
+| Custom connector never appears in **Get Data**, no errors anywhere | Check the install edition first: `Get-AppxPackage -Name "*PowerBI*"`. If it returns a package, you're on the Store/MSIX edition and unsigned connectors cannot load — switch to the standalone MSI edition. |
+| One query refreshes fine, a structurally identical one doesn't | Compare credential trust state per host/data-source (**Data source settings**, Step 16), not the M code. |
+| A credential choice is accepted but the next refresh still prompts again | Check the "Select which level to apply these settings to" dropdown in **Access Web content** — a narrower level than intended may have been selected; re-clear and re-enter at the host level shown by default. |
+
+---
+
 ## Lab results
 
 | Check | Result |
@@ -474,9 +714,11 @@ This step actually clicks it, rather than just asserting it would work.
   rejected outright — see
   [`AUTOMATION-COMPARISON.md`](../AUTOMATION-COMPARISON.md) for that result.
 - **Want to go past one proof table to a full dashboard?** See
-  [`LIVE-DASHBOARD.md`](LIVE-DASHBOARD.md) (Part 4) — it scales this exact
-  pattern to a 3-table live dashboard and documents a custom-connector dead
-  end root-caused to a Microsoft Store/MSIX platform limitation.
+  [Part 6: Scaling to a full 3-table live dashboard](#part-6-scaling-to-a-full-3-table-live-dashboard)
+  below — it scales this exact pattern to a 3-table live dashboard, works
+  through three different credential-type failure modes one at a time, and
+  documents a custom-connector dead end root-caused to a Microsoft
+  Store/MSIX platform limitation.
 
 ## Troubleshooting
 
@@ -505,14 +747,18 @@ This step actually clicks it, rather than just asserting it would work.
 
 ```text
 Automation-Alternatives/PowerQuery/
-├── STEP-BY-STEP.md              This guide
-├── summary.html                 Polished single-page write-up (composite view)
+├── STEP-BY-STEP.md              This guide (Parts 1–6)
+├── summary.html                 Polished single-page write-up (composite view, Parts 1–5)
 ├── 00-architecture-and-code.png M code + live result, side by side
 ├── 01-live-data-result.png      Live result, full size
-└── Steps/                       The 20 screenshots and M code referenced above
-    ├── step01 … step20          In the order used throughout this guide
+└── Steps/                       All screenshots and reference code referenced above
+    ├── step01 … step20          Parts 1–5 — single-table proof of concept
+    ├── step21 … step26          Part 6 — scaling to the 3-table live dashboard
     ├── mcode-placeholder.m       The Step 5 version (inline placeholder token)
-    └── mcode-final-parameterized.m   The Step 8 version (references the Parameter)
+    ├── mcode-final-parameterized.m   The Step 8 version (references the Parameter)
+    └── SCUDashboard-connector.pq      Part 6's custom connector source (no secrets —
+                                       reusable on a Power BI Desktop edition that can
+                                       load unsigned connectors; see Step 20)
 ```
 
 ## References
@@ -527,6 +773,10 @@ Automation-Alternatives/PowerQuery/
 - [Data refresh in Power BI](https://learn.microsoft.com/power-bi/connect-data/refresh-data)
 - [Create and format table visualizations in Power BI](https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-tables)
 - [Format pane General tab overview (Size/Position properties)](https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-format-pane-overview)
+- [Power Query custom connectors overview](https://learn.microsoft.com/power-query/samples/overview)
+- [Handling authentication in a custom connector](https://learn.microsoft.com/power-query/samples/trippin/9-doing-more-with-metadata/tripping9)
+- [`Extension.CurrentCredential` — Power Query M reference](https://learn.microsoft.com/powerquery-m/extension-currentcredential)
+- [Install Power BI Desktop (Store vs. direct download)](https://learn.microsoft.com/power-bi/fundamentals/desktop-get-the-desktop)
 
 ---
 

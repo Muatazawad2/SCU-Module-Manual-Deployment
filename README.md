@@ -14,12 +14,13 @@ the Entra admin center and verified against Microsoft Graph afterward.
 > **Part 3 available:** [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
 > replaces `SCU-Run.ps1`'s data pull with a Logic App, a Power Automate flow,
 > and native Power Query — all three tried live against this tenant, proof
-> screenshots below.
->
-> **Part 4 available:** [`Automation-Alternatives/PowerQuery/LIVE-DASHBOARD.md`](Automation-Alternatives/PowerQuery/LIVE-DASHBOARD.md)
-> scales Part 3's single-table Power Query proof of concept up to a full
-> 3-table live dashboard, including a custom-connector dead end root-caused
-> to a Microsoft Store/MSIX platform limitation.
+> screenshots below. The Power Query approach's own
+> [`STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) goes
+> further still: beyond its single-table proof of concept (Parts 1–5), **Part
+> 6** scales the same pattern up to a full 3-table live dashboard, works
+> through three different Power BI credential-type failure modes one at a
+> time with real error screenshots, and documents a custom-connector dead end
+> root-caused to a Microsoft Store/MSIX platform limitation.
 
 ## Environment used for this run
 
@@ -201,13 +202,17 @@ code calls the SCU API directly via `Web.Contents()`, so Power BI's own
 
 ![Power Query M code and live result](Automation-Alternatives/PowerQuery/00-architecture-and-code.png)
 
-This one also has a full **20-step click-by-click screenshot walkthrough**:
+This one also has a full **26-step click-by-click screenshot walkthrough**:
 [`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) —
 Blank Query → Advanced Editor → Manage Parameters (moving the refresh token
 out of the M code into a Parameter) → a live Refresh Preview → **Close &
 Apply** → a real table visual built from that live data → clicking
 **Refresh** on the report canvas itself → **Save**, producing a real
-`.pbix` file.
+`.pbix` file (Steps 1–14) — then **Part 6** of that same guide scales the
+pattern to a full 3-table live dashboard, including three real Power BI
+credential-type failures worked through one at a time and a custom-connector
+dead end root-caused to a Microsoft Store/MSIX platform limitation
+(Steps 15–22).
 
 See [`AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
 for the full comparison table and tradeoffs. Each approach's `summary.html`
