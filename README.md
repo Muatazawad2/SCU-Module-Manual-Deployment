@@ -5,6 +5,15 @@ This is a screenshot-illustrated re-run of the **SCU Module**'s manual setup
 tenant instead of running `SCU-Setup.ps1`. Every click below was done live in
 the Entra admin center and verified against Microsoft Graph afterward.
 
+## All parts in this repo
+
+| Part | Document | What it covers |
+| --- | --- | --- |
+| **Part 1** *(this doc)* | `README.md` | Register the Entra app by hand — the authentication foundation every other part depends on. Steps 1–4 + Graph verification. |
+| **Part 2** | [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) | Pull usage data with the Part 1 app, fix a Power Query bug caused by partial API responses, redesign the dashboard template into a 10-page, light-mode report. |
+| **Part 3** | [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md) | Compare three ways to automate the data pull without PowerShell: Azure Logic App, Power Automate cloud flow, and native Power Query. |
+| ↳ Power Query walkthrough | [`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) | 26-step click-by-click guide. **Parts 1–5** (Steps 1–14): single-table proof of concept, Blank Query → Parameter → Close & Apply → visual → Refresh → Save. **Part 6** (Steps 15–22): scales that pattern to a full 3-table live dashboard, works through three real Power BI credential-type failures one at a time, and documents a custom-connector dead end root-caused to a Microsoft Store/MSIX platform limitation. |
+
 > [!NOTE]
 > **These are generic, repeatable steps — follow them in your own tenant.**
 > The tenant ID, app name, Client ID, Object ID, and every number or
@@ -35,21 +44,6 @@ the rest of the repo authenticates as.
 | **Verification (Graph via CLI)** | Confirms the consent actually took effect at the directory level, so if Part 2/3/6 later hit an auth error, you know it's *not* a stale/missing registration — that's already been ruled out here. |
 
 **Repository reference:** <https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module>
-
-> **Part 2 available:** [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) covers
-> pulling real usage data with this app and a redesigned, bug-fixed, light-mode
-> Power BI template (`PowerBI/SCU-Dashboard-Light.pbit`).
->
-> **Part 3 available:** [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md)
-> replaces `SCU-Run.ps1`'s data pull with a Logic App, a Power Automate flow,
-> and native Power Query — all three tried live against this tenant, proof
-> screenshots below. The Power Query approach's own
-> [`STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) goes
-> further still: beyond its single-table proof of concept (Parts 1–5), **Part
-> 6** scales the same pattern up to a full 3-table live dashboard, works
-> through three different Power BI credential-type failure modes one at a
-> time with real error screenshots, and documents a custom-connector dead end
-> root-caused to a Microsoft Store/MSIX platform limitation.
 
 ## Example environment from this walkthrough (yours will differ)
 
