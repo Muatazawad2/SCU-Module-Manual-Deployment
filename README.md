@@ -1,9 +1,30 @@
-# SCU Module — Manual Entra App Registration (Screenshot Walkthrough)
+# SCU Module — Part 1: Entra App Registration (Authentication Foundation)
 
 This is a screenshot-illustrated re-run of the **SCU Module**'s manual setup
 (`docs/APP-REGISTRATION.md`, Method B) performed by hand in a dev/sandbox
 tenant instead of running `SCU-Setup.ps1`. Every click below was done live in
 the Entra admin center and verified against Microsoft Graph afterward.
+
+## Why this part comes first
+
+Every later part — Part 2's dashboard, Part 3's three automation approaches,
+and Part 6's live 3-table pull — authenticates the exact same way: exchange a
+delegated refresh token for an access token, using **this app's Client ID**
+and **this app's granted `Purview.DelegatedAccess` scope**. If the app
+doesn't exist yet, or exists but isn't consented, every `Web.Contents`
+call in every later part fails at the token-endpoint step before it ever
+reaches the usage API. This part isn't optional setup — it's the identity
+the rest of the repo authenticates as.
+
+## Why each step is needed
+
+| Step | Why it's required |
+| --- | --- |
+| **1 — Create the app registration** | Produces the **Application (client) ID** — the one value every later `ClientId =` in every M/PowerShell query hardcodes. No app, no ID, nothing else can run. |
+| **2 — Enable public client flow (device code)** | This is a script/Power Query scenario, not a web app — there's no client secret and no redirect URI to catch a browser callback. Public client flow is the only way to sign in interactively without embedding a secret. |
+| **3 — Add Purview API permissions (delegated + application)** | `Purview.DelegatedAccess` is the literal scope requested in every token request from here through Part 6. Without it configured on the app, Entra rejects the scope outright — not a usage-API problem, an app-registration problem. |
+| **4 — Grant admin consent** | Delegated org-data scopes don't activate just by being added — a tenant admin must explicitly approve them. Skip this and Step 3's permissions sit there "Not granted" forever; no token is ever issued. |
+| **Verification (Graph via CLI)** | Confirms the consent actually took effect at the directory level, so if Part 2/3/6 later hit an auth error, you know it's *not* a stale/missing registration — that's already been ruled out here. |
 
 **Repository reference:** <https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module>
 
