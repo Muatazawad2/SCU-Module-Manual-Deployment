@@ -65,14 +65,15 @@ flowchart TD
     class L1 live
 ```
 
-Every part in this repo is one piece of that pipeline:
+Every part in this repo is one piece of that pipeline — click any row to
+jump straight there:
 
 | Stage in the diagram | Where it's covered |
 | --- | --- |
-| Authentication foundation | **Part 1** (below) |
-| Pulling the data (4 interchangeable ways) | **Part 3** |
-| Static dashboard (Excel export → template) | **Part 2** |
-| Live dashboard (Power BI queries the API directly, no export step) | **Part 3, Stage 6** |
+| Authentication foundation | [**Part 1**](#scu-module--part-1-entra-app-registration-authentication-foundation) (below) |
+| Pulling the data (4 interchangeable ways) | [**Part 3**](#part-3--automating-the-data-pull-without-powershell) |
+| Static dashboard (Excel export → template) | [**Part 2**](#part-2--power-bi-usage-dashboard-pull-data--redesign) |
+| Live dashboard (Power BI queries the API directly, no export step) | [**Part 3, Stage 6**](#stage-6-scaling-to-a-full-3-table-live-dashboard) |
 
 ---
 
