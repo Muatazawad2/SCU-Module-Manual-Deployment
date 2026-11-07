@@ -1,5 +1,80 @@
 # SCU Module — Part 1: Entra App Registration (Authentication Foundation)
 
+## The problem, and how this repo solves it
+
+**Security Copilot usage/cost data has no native Power BI connector.** It
+only exists behind an undocumented, delegated-auth-only REST API. Getting
+it into a dashboard means building the whole pipeline by hand: register an
+app that's allowed to ask for the data, trade a saved sign-in for a
+short-lived access token every time you want fresh numbers, call the API
+with that token, and land the result somewhere Power BI can read — then,
+ideally, skip the landing step entirely and let Power BI call the API
+directly.
+
+```mermaid
+flowchart TD
+    Problem(["🎯 Problem: Security Copilot usage/cost data has no native\nPower BI connector — only an undocumented, delegated-auth REST API"])
+
+    Problem --> Auth
+
+    subgraph Auth["Part 1 — Authentication foundation"]
+        direction TB
+        A1["Register Entra app\n(SCU-Usage-Puller)"] --> A2["Grant Purview.DelegatedAccess\n+ enable device-code sign-in"]
+    end
+
+    Auth --> Token(["Delegated refresh token\n— exchanged for a short-lived access\ntoken on every single data pull"])
+
+    Token --> Pull
+
+    subgraph Pull["Part 3 — Four ways to pull the data"]
+        direction LR
+        P1["SCU-Run.ps1\n(PowerShell)"]
+        P2["Azure Logic App"]
+        P3["Power Automate\ncloud flow"]
+        P4["Power Query M\n(direct from Power BI)"]
+    end
+
+    P1 --> Static
+    P2 -. proof of concept .-> Static
+    P3 -. proof of concept .-> Static
+    P4 --> Live
+
+    subgraph Static["Part 2 — Static dashboard"]
+        direction TB
+        S1["SCU-Report.xlsx\n(point-in-time export)"] --> S2["SCU-Dashboard-Light.pbit\n10-page template"]
+    end
+
+    subgraph Live["Part 3, Stage 6 — Live dashboard"]
+        direction TB
+        L1["SCU-Dashboard-LiveAPI.pbix\nHourly / Sessions / Daily\nclick Refresh = always current"]
+    end
+
+    classDef problem fill:#FEE2E2,stroke:#B91C1C,color:#7F1D1D,font-weight:bold
+    classDef part1 fill:#DBEAFE,stroke:#1D4ED8,color:#1E3A8A
+    classDef token fill:#FEF3C7,stroke:#B45309,color:#78350F
+    classDef pull fill:#E0E7FF,stroke:#4338CA,color:#312E81
+    classDef static fill:#F3E8FF,stroke:#7E22CE,color:#581C87
+    classDef live fill:#D1FAE5,stroke:#047857,color:#064E3B
+
+    class Problem problem
+    class A1,A2 part1
+    class Token token
+    class P1,P2,P3,P4 pull
+    class S1,S2 static
+    class L1 live
+```
+
+Every part in this repo is one piece of that pipeline:
+
+| Stage in the diagram | Where it's covered |
+| --- | --- |
+| Authentication foundation | **Part 1** (below) |
+| Pulling the data (4 interchangeable ways) | **Part 3** |
+| Static dashboard (Excel export → template) | **Part 2** |
+| Live dashboard (Power BI queries the API directly, no export step) | **Part 3, Stage 6** |
+
+---
+
 This is a screenshot-illustrated re-run of the **SCU Module**'s manual setup
 (`docs/APP-REGISTRATION.md`, Method B) performed by hand in a dev/sandbox
 tenant instead of running `SCU-Setup.ps1`. Every click below was done live in
