@@ -1,19 +1,20 @@
 # SCU Module — Part 1: Entra App Registration (Authentication Foundation)
 
-## The problem, and how this repo solves it
+## The goal, and how this repo gets there
 
-**Security Copilot usage/cost data has no native Power BI connector.** It
-only exists behind an undocumented, delegated-auth-only REST API. Getting
-it into a dashboard means building the whole pipeline by hand: register an
-app that's allowed to ask for the data, trade a saved sign-in for a
-short-lived access token every time you want fresh numbers, call the API
-with that token, and land the result somewhere Power BI can read — then,
-ideally, skip the landing step entirely and let Power BI call the API
-directly.
+**Goal: get more detailed Security Copilot usage (SCU) insight by
+integrating Power BI directly with Security Copilot's usage/cost data.**
+That data has no native Power BI connector, though — it only exists behind
+an undocumented, delegated-auth-only REST API. Getting it into a dashboard
+means building the whole pipeline by hand: register an app that's allowed
+to ask for the data, trade a saved sign-in for a short-lived access token
+every time you want fresh numbers, call the API with that token, and land
+the result somewhere Power BI can read — then, ideally, skip the landing
+step entirely and let Power BI call the API directly.
 
 ```mermaid
 flowchart TD
-    Problem(["🎯 Problem: Security Copilot usage/cost data has no native\nPower BI connector — only an undocumented, delegated-auth REST API"])
+    Problem(["🎯 Goal: richer SCU insight via Power BI integration\n(blocked by: no native connector — only an undocumented,\ndelegated-auth REST API)"])
 
     Problem --> Auth
 
