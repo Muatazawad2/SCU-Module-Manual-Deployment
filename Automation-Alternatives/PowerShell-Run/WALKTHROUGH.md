@@ -70,6 +70,7 @@ below is a real, unedited terminal run — not a mock-up.
 | **Azure CLI** | Signed in to the tenant that has your Security Copilot capacity (`az login`). The script checks and will prompt if you're not. |
 | **The `ImportExcel` PowerShell module** | `Install-Module ImportExcel -Scope CurrentUser` if you don't already have it. |
 | **A Security Copilot capacity in that tenant** | The name of an existing `Microsoft.SecurityCopilot/capacities` resource — you'll pass it as `-Capacity`. |
+| **Your tenant's Security Copilot pod ID** | A tenant/region-specific GUID, not shown in any admin UI — you'll pass it as `-PodId`. See [Good to know](#good-to-know) for how to find it. |
 | **The `SCU-Usage-Puller` app registration from [Part 1](../../README.md)** | Either let `SCU-Setup.ps1` create it fresh, or pass `-AppId` to reuse one your admin already registered. |
 | **Time** | About 2–3 minutes for setup (less if a cached refresh token already exists), then 1–2 minutes per `SCU-Run.ps1` pull depending on how much usage data your tenant has. |
 
@@ -97,12 +98,14 @@ permissions, and a signed-in identity are all in place before any data pull
 is attempted.
 
 ```powershell
-.\SCU-Setup.ps1 -AppId <your-app-registration-client-id> -Capacity "<your-capacity-name>"
+.\SCU-Setup.ps1 -AppId <your-app-registration-client-id> -Capacity "<your-capacity-name>" -PodId "<your-pod-id>"
 ```
 
 Passing `-AppId` reuses an existing app registration instead of creating a
 new one — useful when an admin already ran Part 1 and shared the client ID.
 Omit it to let the script create a fresh `SCU-Usage-Puller` app.
+`-Capacity` and `-PodId` can both be omitted too — the script prompts for
+each interactively if not supplied.
 
 <p align="center"><img src="Steps/run02-setup-prereqs-signin-app-reuse.png" alt="SCU-Setup.ps1 checking prerequisites, signing in, and reusing the app registration" width="760"><br><sub>Stage <b>1/5</b> confirms PowerShell, Azure CLI, and <code>ImportExcel</code> are all present; <b>2/5</b> confirms the Azure CLI sign-in and capacity name; <b>3/5</b> finds and reuses the existing app registration rather than creating a duplicate.</sub></p>
 
@@ -185,6 +188,17 @@ confirm the pull actually produced usable data.
   team runs `SCU-Setup.ps1` without `-AppId`, each run creates its own
   `SCU-Usage-Puller` app registration. Share the client ID from the first
   run and have everyone else pass `-AppId <that-client-id>` instead.
+- **Pod ID isn't shown in any admin UI.** Unlike the Capacity name, there's
+  no portal page that lists it. The quickest way to find yours: open the
+  Security Copilot portal, open your browser's dev tools **Network** tab,
+  and look for any request to
+  `securityplatform.microsoft.com/pods/<guid>/...` — that GUID is your pod
+  ID. `SCU-Setup.ps1` saves it to `config.json` the first time, so you only
+  need to find it once per tenant.
+- **`-CreditLine` on `SCU-Run.ps1` is optional attribution text**, shown in
+  a small footer on the HTML dashboard and the Power BI template (e.g.
+  `-CreditLine "Built by Contoso IT"`). Left blank by default — no credit
+  line appears unless you pass one.
 - **`SCU-Run.ps1` has flags for partial runs**, useful once you've already
   got a full run working: `-NoRefresh` (rebuild dashboards from existing
   data without re-pulling), `-SkipPbit` / `-SkipHtml` (skip one output
@@ -206,6 +220,7 @@ confirm the pull actually produced usable data.
 |---|---|
 | `SCU-Setup.ps1` stops at prerequisite checks | Install the missing piece it names — PowerShell 7 (`winget install Microsoft.PowerShell`), Azure CLI (`winget install Microsoft.AzureCLI`), or `ImportExcel` (`Install-Module ImportExcel -Scope CurrentUser`). |
 | `SCU-Setup.ps1` prompts for a capacity name every time | Pass `-Capacity "<name>"` explicitly instead of relying on the interactive prompt. |
+| `SCU-Setup.ps1` prompts for a pod ID every time | Pass `-PodId "<guid>"` explicitly — see [Good to know](#good-to-know) for how to find it. |
 | Two different `SCU-Usage-Puller` app registrations exist in the same tenant | Someone ran `SCU-Setup.ps1` without `-AppId` more than once. Pick one client ID as the canonical one and have everyone pass `-AppId` with that value going forward. |
 | `SCU-Run.ps1` falls back to a device-code sign-in unexpectedly | The cached refresh token expired (~90-day window) or was never created on this machine/user. Complete the device-code sign-in once; it's cached again afterward. |
 | `SCU-Run.ps1` reports 0 sessions or 0 hourly rows | The tenant genuinely has no Security Copilot usage in the pull window. Widen `-Days` (default 90) or confirm usage exists in the Security Copilot portal directly. |

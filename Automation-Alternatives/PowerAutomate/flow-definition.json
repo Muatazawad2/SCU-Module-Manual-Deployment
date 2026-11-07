@@ -2,7 +2,13 @@
   "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "$connections": { "defaultValue": {}, "type": "Object" }
+    "$connections": { "defaultValue": {}, "type": "Object" },
+    "tenantId": { "type": "String", "defaultValue": "<YOUR_TENANT_ID>" },
+    "clientId": { "type": "String", "defaultValue": "<YOUR_APP_CLIENT_ID>" },
+    "podId": { "type": "String", "defaultValue": "<YOUR_POD_ID>" },
+    "workspace": { "type": "String", "defaultValue": "default" },
+    "capacity": { "type": "String", "defaultValue": "<YOUR_CAPACITY_NAME>" },
+    "purviewApiAudience": { "type": "String", "defaultValue": "73c2949e-da2d-457a-9607-fcc665198967" }
   },
   "triggers": {
     "Daily_recurrence": {
@@ -15,9 +21,9 @@
       "type": "Http",
       "inputs": {
         "method": "POST",
-        "uri": "https://login.microsoftonline.com/e6cf700c-2029-4e98-aedd-f589e62f7316/oauth2/v2.0/token",
+        "uri": "@{concat('https://login.microsoftonline.com/', parameters('tenantId'), '/oauth2/v2.0/token')}",
         "headers": { "Content-Type": "application/x-www-form-urlencoded" },
-        "body": "grant_type=refresh_token&client_id=72bb0a2b-c028-4a0f-bb57-78a81db6fc18&refresh_token=PLACEHOLDER_REFRESH_TOKEN&scope=73c2949e-da2d-457a-9607-fcc665198967%2FPurview.DelegatedAccess%20offline_access"
+        "body": "@{concat('grant_type=refresh_token&client_id=', parameters('clientId'), '&refresh_token=PLACEHOLDER_REFRESH_TOKEN&scope=', parameters('purviewApiAudience'), '%2FPurview.DelegatedAccess%20offline_access')}"
       },
       "runAfter": {}
     },
@@ -35,7 +41,7 @@
       "type": "Http",
       "inputs": {
         "method": "POST",
-        "uri": "https://us.api.securityplatform.microsoft.com/pods/ee221a39-3ce7-48ee-8b63-18bd56c52288/workspaces/default/securitycopilot/usage/SecCo/aggregates/hourly",
+        "uri": "@{concat('https://us.api.securityplatform.microsoft.com/pods/', parameters('podId'), '/workspaces/', parameters('workspace'), '/securitycopilot/usage/', parameters('capacity'), '/aggregates/hourly')}",
         "headers": {
           "Authorization": "@{concat('Bearer ', body('Get_access_token')?['access_token'])}",
           "Content-Type": "application/json"
