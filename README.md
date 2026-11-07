@@ -20,10 +20,10 @@ flowchart TD
 
     subgraph Auth["Part 1 — Authentication foundation"]
         direction TB
-        A1["Register Entra app\n(SCU-Usage-Puller)"] --> A2["Grant Purview.DelegatedAccess\n+ enable device-code sign-in"]
+        A1["Register Entra app\n(SCU-Usage-Puller)"] --> A2["Grant Purview.DelegatedAccess"]
     end
 
-    Auth --> Token(["Delegated refresh token\n— exchanged for a short-lived access\ntoken on every single data pull"])
+    Auth --> Token(["Delegated refresh token"])
 
     Token --> Pull
 
@@ -40,16 +40,16 @@ flowchart TD
     P3 --> Verified
     P4 --> Live
 
-    Verified(["✅ Verified: pulls real data successfully\n(21 rows, confirmed Succeeded)\n— not yet wired into a dashboard file"])
+    Verified(["✅ Verified: pulls real data\n— not yet wired to a dashboard"])
 
     subgraph Static["Part 2 — Static dashboard"]
         direction TB
-        S1["SCU-Report.xlsx\n(point-in-time export)"] --> S2["SCU-Dashboard-Light.pbit\n10-page template"]
+        S1["SCU-Report.xlsx"] --> S2["SCU-Dashboard-Light.pbit"]
     end
 
     subgraph Live["Part 3, Stage 6 — Live dashboard"]
         direction TB
-        L1["SCU-Dashboard-LiveAPI.pbix\nHourly / Sessions / Daily\nclick Refresh = always current"]
+        L1["SCU-Dashboard-LiveAPI.pbix\nHourly / Sessions / Daily"]
     end
 
     classDef problem fill:#FEE2E2,stroke:#B91C1C,color:#7F1D1D,font-weight:bold
