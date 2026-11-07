@@ -5,7 +5,9 @@ a dev/sandbox tenant and the same undocumented Security Copilot usage API —
 all three are generic, reusable patterns you can point at your own tenant.
 See [`README.md`](README.md) for the Entra app walkthrough and
 [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) for the dashboard itself —
-this document covers *what pulls the data instead of the script*.
+this document covers *what pulls the data instead of the script*. For what
+the script itself looks like, with real terminal screenshots of every stage,
+see [`PowerShell-Run/WALKTHROUGH.md`](PowerShell-Run/WALKTHROUGH.md).
 
 > [!NOTE]
 > The tenant, resource names, row counts, and screenshots below are from one

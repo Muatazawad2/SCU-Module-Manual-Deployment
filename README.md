@@ -76,6 +76,7 @@ jump straight there:
 | --- | --- |
 | Authentication foundation | [**Part 1**](#scu-module--part-1-entra-app-registration-authentication-foundation) (below) |
 | Pulling the data (4 interchangeable ways — all 4 verified with real API calls; only 2 feed an actual dashboard file today) | [**Part 3**](#part-3--automating-the-data-pull-without-powershell) |
+| ↳ `SCU-Run.ps1` in detail (real terminal screenshots, step by step) | [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md) |
 | Static dashboard (Excel export → template) | [**Part 2**](#part-2--power-bi-usage-dashboard-pull-data--redesign) |
 | Live dashboard (Power BI queries the API directly, no export step) | [**Part 3, Stage 6**](#stage-6-scaling-to-a-full-3-table-live-dashboard) |
 
@@ -92,6 +93,7 @@ the Entra admin center and verified against Microsoft Graph afterward.
 | --- | --- | --- |
 | **Part 1** *(this doc)* | `README.md` | Register the Entra app by hand — the authentication foundation every other part depends on. Steps 1–4 + Graph verification. |
 | **Part 2** | [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) | Pull usage data with the Part 1 app, fix a Power Query bug caused by partial API responses, redesign the dashboard template into a 10-page, light-mode report. |
+| ↳ PowerShell walkthrough | [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md) | 7-step, real-terminal-screenshot guide to `SCU-Setup.ps1` + `SCU-Run.ps1` — prerequisites, sign-in, app reuse, admin consent, the full data pull, and the generated HTML dashboard, end to end. |
 | **Part 3** | [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md) | Compare three ways to automate the data pull without PowerShell: Azure Logic App, Power Automate cloud flow, and native Power Query. |
 | ↳ Power Query walkthrough | [`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) | 26-step click-by-click guide. **Parts 1–5** (Steps 1–14): single-table proof of concept, Blank Query → Parameter → Close & Apply → visual → Refresh → Save. **Part 6** (Steps 15–22): scales that pattern to a full 3-table live dashboard, works through three real Power BI credential-type failures one at a time, and documents a custom-connector dead end root-caused to a Microsoft Store/MSIX platform limitation. |
 
@@ -326,6 +328,12 @@ In **this example run's** dev tenant, the run completed with:
 | Distinct users | 4 |
 | Available plugins | 90 |
 | Anomaly days (>2σ) | 4 |
+
+> [!TIP]
+> Want to see this exact sequence as real, unedited terminal screenshots —
+> prerequisite checks, sign-in, app reuse, admin consent, and the full data
+> pull through to the generated dashboard? See
+> [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md).
 
 Two sub-endpoints (session catalog, promptbooks) returned **HTTP 500** for
 this tenant — expected for a low-activity dev/trial tenant. A busier,
