@@ -31,7 +31,7 @@ see [`PowerShell-Run/WALKTHROUGH.md`](PowerShell-Run/WALKTHROUGH.md).
 
 ## Approach 1 — Azure Logic App
 
-**[Full write-up →](LogicApp/summary.html)** · **[ARM template →](LogicApp/azuredeploy.json)**
+**[Full write-up →](LogicApp/summary.html)** · **[ARM template →](LogicApp/azuredeploy.json)** · **[Live Portal walkthrough →](LogicApp/WALKTHROUGH.md)**
 
 A Consumption Logic App with a daily Recurrence trigger, an HTTP action that
 exchanges the refresh token for an access token, and HTTP actions that call
@@ -48,17 +48,20 @@ Blob Storage output. Worked around by using a Logic-App-native `securestring`
 parameter for the token (encrypted by the platform, no external Key Vault
 needed) and skipping the Blob-output step for this proof of concept.
 
-**Portal screenshots:** not captured. Interactive Azure Portal sign-in to
-this tenant currently requires a one-time, device-bound passkey registration
-that needs the account owner physically present — appropriate not to push
-through unattended. Everything shown here was built and verified
-non-interactively via Azure CLI / ARM / REST, which was already signed in.
+**Portal screenshots: captured.** Interactive Azure Portal sign-in to this
+tenant requires a one-time, device-bound passkey/MFA registration — the
+account owner completed that live, in person, in a follow-up session. See
+[`LogicApp/WALKTHROUGH.md`](LogicApp/WALKTHROUGH.md) for the full
+click-by-click Portal walkthrough: overview and run history, the Designer
+canvas, a specific run with all 7 steps succeeded, and a real action's
+sanitized inputs/real outputs — real tenant data throughout, with the bearer
+token automatically redacted (`*sanitized*`) by the platform in every view.
 
 ---
 
 ## Approach 2 — Power Automate Cloud Flow
 
-**[Full write-up →](PowerAutomate/summary.html)** · **[Flow definition →](PowerAutomate/flow-definition.json)**
+**[Full write-up →](PowerAutomate/summary.html)** · **[Flow definition →](PowerAutomate/flow-definition.json)** · **[Live Maker Portal walkthrough →](PowerAutomate/WALKTHROUGH.md)**
 
 Functionally identical to the Logic App (same Workflow Definition Language
 under the hood), but authored as a Power Platform cloud flow instead of an
@@ -66,20 +69,32 @@ Azure resource.
 
 ![Power Automate architecture and live proof](PowerAutomate/01-architecture-and-proof.png)
 
-**Blocker hit:** the Power Automate Maker portal (`make.powerautomate.com`)
-hit the *same* interactive-sign-in wall as the Azure Portal — plus a second,
-separate problem: my own account has no role on this tenant's real
-Dataverse-backed environment (only visible/accessible via the tenant admin
-identity).
+**Blocker hit, originally:** the Power Automate Maker portal
+(`make.powerautomate.com`) hit the *same* interactive-sign-in wall as the
+Azure Portal — plus what looked like a second, separate problem: the
+account used for everyday browsing had no visible role on this tenant's real
+Dataverse-backed environment.
 
-**Workaround:** Power Automate cloud flows are just `workflow` records in
-Dataverse (`category=5`, "Modern Flow"). Using the already-authenticated
-tenant-admin session, the flow was created directly via the **Dataverse Web
-API** (`POST /api/data/v9.2/workflows`) against the tenant's real Default
-Environment, activated with a follow-up `PATCH`, and confirmed genuinely
-"Started" via the Power Automate Flow Management API — no Maker Portal
-click involved. Manually triggered afterward and confirmed `Succeeded` with
-21 real rows pulled.
+**Workaround used at the time:** Power Automate cloud flows are just
+`workflow` records in Dataverse (`category=5`, "Modern Flow"). Using the
+already-authenticated tenant-admin session, the flow was created directly
+via the **Dataverse Web API** (`POST /api/data/v9.2/workflows`) against the
+tenant's real Default Environment, activated with a follow-up `PATCH`, and
+confirmed genuinely "Started" via the Power Automate Flow Management API —
+no Maker Portal click involved. Manually triggered afterward and confirmed
+`Succeeded` with 21 real rows pulled.
+
+**Resolved in a follow-up session:** once the account owner completed the
+same interactive passkey/MFA sign-in used for the Logic App, and picked the
+tenant's own System Administrator identity (the flow's actual primary owner)
+at the Maker Portal's account picker, the "no role on Dataverse environment"
+limitation turned out to apply only to a *different* identity — this one had
+full access immediately, with no extra MFA prompt and no environment
+switching needed. See
+[`PowerAutomate/WALKTHROUGH.md`](PowerAutomate/WALKTHROUGH.md) for the full
+click-by-click Maker Portal walkthrough: flow overview and 28-day run
+history, the designer canvas, a specific run with every step succeeded, and
+a real action's sanitized inputs/real outputs (HTTP 200, real usage data).
 
 ---
 
@@ -102,9 +117,9 @@ data-source trust prompts (Anonymous + Public privacy level for both
 `login.microsoftonline.com` and the SCU API host), and refreshed successfully:
 **10 columns, 21 rows**, live tenant data.
 
-**Unlike Approaches 1 and 2, this one has a genuine portal-click screenshot
-trail** — [`STEP-BY-STEP.md`](PowerQuery/STEP-BY-STEP.md) walks all 26 steps
-with real screenshots: Blank Query → Advanced Editor → the inline-token
+**This one has its own genuine portal-click screenshot trail, too** —
+[`STEP-BY-STEP.md`](PowerQuery/STEP-BY-STEP.md) walks all 26 steps with real
+screenshots: Blank Query → Advanced Editor → the inline-token
 version failing as expected on a placeholder → switching to a **Power Query
 Parameter** so the token never sits in the M code → the final parameterized
 query → a live Refresh Preview returning real tenant data → **Close & Apply**

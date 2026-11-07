@@ -77,6 +77,8 @@ jump straight there:
 | Authentication foundation | [**Part 1**](#scu-module--part-1-entra-app-registration-authentication-foundation) (below) |
 | Pulling the data (4 interchangeable ways — all 4 verified with real API calls; only 2 feed an actual dashboard file today) | [**Part 3**](#part-3--automating-the-data-pull-without-powershell) |
 | ↳ `SCU-Run.ps1` in detail (real terminal screenshots, step by step) | [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md) |
+| ↳ Azure Logic App in detail (real Azure Portal screenshots, step by step) | [`Automation-Alternatives/LogicApp/WALKTHROUGH.md`](Automation-Alternatives/LogicApp/WALKTHROUGH.md) |
+| ↳ Power Automate cloud flow in detail (real Maker Portal screenshots, step by step) | [`Automation-Alternatives/PowerAutomate/WALKTHROUGH.md`](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md) |
 | Static dashboard (Excel export → template) | [**Part 2**](#part-2--power-bi-usage-dashboard-pull-data--redesign) |
 | Live dashboard (Power BI queries the API directly, no export step) | [**Part 3, Stage 6**](#stage-6-scaling-to-a-full-3-table-live-dashboard) |
 
@@ -95,6 +97,8 @@ the Entra admin center and verified against Microsoft Graph afterward.
 | **Part 2** | [`POWERBI-DASHBOARD.md`](POWERBI-DASHBOARD.md) | Pull usage data with the Part 1 app, fix a Power Query bug caused by partial API responses, redesign the dashboard template into a 10-page, light-mode report. |
 | ↳ PowerShell walkthrough | [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md) | 7-step, real-terminal-screenshot guide to `SCU-Setup.ps1` + `SCU-Run.ps1` — prerequisites, sign-in, app reuse, admin consent, the full data pull, and the generated HTML dashboard, end to end. |
 | **Part 3** | [`Automation-Alternatives/AUTOMATION-COMPARISON.md`](Automation-Alternatives/AUTOMATION-COMPARISON.md) | Compare three ways to automate the data pull without PowerShell: Azure Logic App, Power Automate cloud flow, and native Power Query. |
+| ↳ Azure Logic App walkthrough | [`Automation-Alternatives/LogicApp/WALKTHROUGH.md`](Automation-Alternatives/LogicApp/WALKTHROUGH.md) | 7-step, real-Azure-Portal-screenshot guide: overview and run history, Designer canvas, a specific run with all 7 steps succeeded, and a real action's sanitized inputs / real outputs. |
+| ↳ Power Automate walkthrough | [`Automation-Alternatives/PowerAutomate/WALKTHROUGH.md`](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md) | 7-step, real-Maker-Portal-screenshot guide: flow overview and 28-day run history, designer canvas, a specific run with every step succeeded, and a real action's sanitized inputs / real outputs (HTTP 200). |
 | ↳ Power Query walkthrough | [`Automation-Alternatives/PowerQuery/STEP-BY-STEP.md`](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) | 26-step click-by-click guide. **Parts 1–5** (Steps 1–14): single-table proof of concept, Blank Query → Parameter → Close & Apply → visual → Refresh → Save. **Part 6** (Steps 15–22): scales that pattern to a full 3-table live dashboard, works through three real Power BI credential-type failures one at a time, and documents a custom-connector dead end root-caused to a Microsoft Store/MSIX platform limitation. |
 
 > [!NOTE]
@@ -488,17 +492,13 @@ same constraint the original PowerShell already assumes.
 
 > **Note on these screenshots:** interactive sign-in to the Azure Portal and
 > the Power Automate Maker portal both hit a one-time, device-bound MFA
-> registration wall that needed the account owner physically present — not
-> something to push through unattended. So for **Approaches 1 and 2** these
-> aren't portal-click screenshots; they're rendered proof-of-work pages
-> (architecture + live API output) built because the resources themselves
-> were created and verified entirely via CLI/REST instead of the Portal UI.
-> **Approach 3 (Power Query) hit no such wall** — it runs entirely inside
-> Power BI Desktop, so it has a full, genuine click-by-click screenshot
-> walkthrough instead; see its section below. Each links to the underlying
-> ARM template / flow definition / M code.
+> registration wall that needed the account owner physically present. All
+> three resources were first built and verified non-interactively (CLI/REST
+> for Approaches 1–2, Power BI Desktop for Approach 3), and the account owner
+> later completed that interactive sign-in live, which is what makes the real
+> Portal/Maker-Portal screenshots below possible for all three approaches now.
 
-### Approach 1 — Azure Logic App ([ARM template](Automation-Alternatives/LogicApp/azuredeploy.json))
+### Approach 1 — Azure Logic App ([ARM template](Automation-Alternatives/LogicApp/azuredeploy.json) · [full walkthrough](Automation-Alternatives/LogicApp/WALKTHROUGH.md))
 
 Deployed via `az deployment group create`, triggered manually, confirmed
 `Succeeded` — 21 real hourly rows + 90 skillsets pulled.
@@ -512,36 +512,56 @@ Blob Storage output. Worked around by using a Logic-App-native `securestring`
 parameter for the token (encrypted by the platform, no external Key Vault
 needed) and skipping the Blob-output step for this proof of concept.
 
-**Portal screenshots:** not captured. Interactive Azure Portal sign-in to
-this tenant currently requires a one-time, device-bound passkey registration
-that needs the account owner physically present — appropriate not to push
-through unattended. Everything shown here was built and verified
-non-interactively via Azure CLI / ARM / REST, which was already signed in.
+**Portal screenshots: captured**, once the account owner completed the
+one-time, device-bound passkey/MFA sign-in. Full details in
+[`LogicApp/WALKTHROUGH.md`](Automation-Alternatives/LogicApp/WALKTHROUGH.md):
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp01-overview-run-history.png" alt="Logic App overview blade showing daily run history, all Succeeded" width="760"><br><sub>The <code>scu-usage-puller-logicapp</code> overview blade — daily runs since 10/30/2026, every single one <b>Succeeded</b>.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp02-designer-workflow.png" alt="Full Logic App Designer canvas with 7 steps" width="760"><br><sub>Designer canvas: Daily recurrence → Get access token → Set window start/end → Pull hourly aggregates → Pull skillset catalog → Compose pull summary.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp03-run-detail-all-succeeded.png" alt="A specific Logic App run with all 7 steps green-checked" width="760"><br><sub>A real run (11/7/2026, 12:00 AM) — all 7 steps green-checked, 3.9 seconds total.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp04-action-inputs-sanitized-auth.png" alt="Pull hourly aggregates action Inputs panel, Authorization sanitized" width="760"><br><sub>Real request URI/body for "Pull hourly aggregates" — <code>Authorization</code> auto-redacted as <code>*sanitized*</code> by the platform.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp05-action-outputs-real-data.png" alt="Pull hourly aggregates action Outputs panel with real usage records" width="760"><br><sub>Real returned hourly usage records — <code>usedCapacity</code>, <code>aggregateStartTime</code>, and related fields.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp06-compose-summary-final-result.png" alt="Compose pull summary action showing the final run result" width="760"><br><sub>End-to-end result summary: <code>hourlyRowCount: 20</code>, <code>skillsetCount: 90</code>, real time window.</sub></p>
 
 ---
 
-### Approach 2 — Power Automate Cloud Flow ([flow definition](Automation-Alternatives/PowerAutomate/flow-definition.json))
+### Approach 2 — Power Automate Cloud Flow ([flow definition](Automation-Alternatives/PowerAutomate/flow-definition.json) · [full walkthrough](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md))
 
-Maker portal was unreachable (same MFA wall), so the flow was created
-directly via the Dataverse Web API, activated, and confirmed genuinely
-"Started" — triggered manually, 21 rows pulled.
+Maker portal was unreachable at first (same MFA wall), so the flow was
+created directly via the Dataverse Web API, activated, and confirmed
+genuinely "Started" — triggered manually, 21 rows pulled.
 
 ![Power Automate architecture and live proof](Automation-Alternatives/PowerAutomate/01-architecture-and-proof.png)
 
-**Blocker hit:** the Power Automate Maker portal (`make.powerautomate.com`)
-hit the *same* interactive-sign-in wall as the Azure Portal — plus a second,
-separate problem: my own account has no role on this tenant's real
-Dataverse-backed environment (only visible/accessible via the tenant admin
-identity).
+**Blocker hit, originally:** the Power Automate Maker portal
+(`make.powerautomate.com`) hit the *same* interactive-sign-in wall as the
+Azure Portal — plus what looked like a second, separate problem: the
+account used for everyday browsing had no visible role on this tenant's
+real Dataverse-backed environment.
 
-**Workaround:** Power Automate cloud flows are just `workflow` records in
-Dataverse (`category=5`, "Modern Flow"). Using the already-authenticated
-tenant-admin session, the flow was created directly via the **Dataverse Web
-API** (`POST /api/data/v9.2/workflows`) against the tenant's real Default
-Environment, activated with a follow-up `PATCH`, and confirmed genuinely
-"Started" via the Power Automate Flow Management API — no Maker Portal
-click involved. Manually triggered afterward and confirmed `Succeeded` with
-21 real rows pulled.
+**Resolved in a follow-up session:** once signed in as the tenant's own
+System Administrator identity (the flow's actual primary owner), the Maker
+Portal, the Default Environment, and the flow were all immediately
+accessible — no extra MFA prompt and no environment-switching needed. Full
+details in
+[`PowerAutomate/WALKTHROUGH.md`](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md):
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa01-overview-run-history.png" alt="Power Automate flow details blade showing 28-day run history, all Succeeded" width="760"><br><sub><b>SCU Usage Puller (Power Automate POC)</b> — Status: On — 28-day run history, every run <b>Succeeded</b>.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa02-designer-workflow.png" alt="Full Power Automate designer canvas with 7 steps" width="760"><br><sub>Designer canvas — functionally identical to the Logic App version, authored as a Power Platform cloud flow instead.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa03-run-detail-all-succeeded.png" alt="A specific Power Automate run with all steps green-checked" width="760"><br><sub>"Your flow ran successfully" — the 11/7/2026, 12:00 AM run, every step green-checked.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa04-action-inputs-sanitized-auth.png" alt="Pull hourly aggregates action Inputs panel, Authorization sanitized" width="760"><br><sub>Real request URI/body for "Pull hourly aggregates" — <code>Authorization</code> auto-redacted as <code>*sanitized*</code>, same as the Logic App.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa05-action-outputs-real-data.png" alt="Pull hourly aggregates action Outputs panel with real usage records" width="760"><br><sub>Real returned usage data — <code>usedCapacity: 0.0533733333333334</code> and <b>Status code 200</b>.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa06-compose-summary-final-result.png" alt="Compose pull summary action showing the final run result" width="760"><br><sub>End-to-end result summary: <code>hourlyRowCount: 20</code>, real <code>pulledAtUtc</code> timestamp.</sub></p>
 
 ---
 
