@@ -1,5 +1,23 @@
 # SCU Module — Part 1: Entra App Registration (Authentication Foundation)
 
+[![Status](https://img.shields.io/badge/status-verified_with_live_data-2EA44F)](#all-parts-in-this-repo)
+[![Microsoft Entra](https://img.shields.io/badge/Microsoft_Entra-app_registration-00A4EF?logo=microsoftazure&logoColor=white)](#step-1--create-the-app-registration)
+[![Power BI](https://img.shields.io/badge/Power_BI-usage_dashboard-F2C811?logo=powerbi&logoColor=black)](#part-2--power-bi-usage-dashboard-pull-data--redesign)
+[![Azure Logic Apps](https://img.shields.io/badge/Azure_Logic_Apps-automation-8C3C9C?logo=azurelogicapps&logoColor=white)](Automation-Alternatives/LogicApp/WALKTHROUGH.md)
+[![Power Automate](https://img.shields.io/badge/Power_Automate-cloud_flow-0066FF?logo=powerautomate&logoColor=white)](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md)
+[![PowerShell](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md)
+[![Private repo](https://img.shields.io/badge/repo-private_working_notes-lightgrey)]()
+
+## At a glance
+
+| Part | What | Status |
+| --- | --- | --- |
+| **Part 1** | Entra app registration (authentication foundation) | ✅ Done — 4 steps + Microsoft Graph verification |
+| **Part 2** | Power BI usage dashboard — pull data, redesign the template | ✅ Done — 10-page report, real tenant data |
+| **Part 3** · Logic App | Daily Azure automation of the data pull | ✅ Verified — real Azure Portal screenshots, [walkthrough](Automation-Alternatives/LogicApp/WALKTHROUGH.md) |
+| **Part 3** · Power Automate | Daily Power Platform automation of the data pull | ✅ Verified — real Maker Portal screenshots, [walkthrough](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md) |
+| **Part 3** · Power Query | Native Power BI refresh, no external resource | ✅ Verified — 26-step screenshot walkthrough, [walkthrough](Automation-Alternatives/PowerQuery/STEP-BY-STEP.md) |
+
 ## The goal, and how this repo gets there
 
 **Goal: get more detailed Security Copilot usage (SCU) insight by
@@ -251,6 +269,9 @@ Both match the expected values in `docs/APP-REGISTRATION.md` exactly.
 
 ---
 
+<details>
+<summary><strong>▶ Part 2 — Power BI Usage Dashboard (Pull Data + Redesign)</strong> — click to expand</summary>
+
 ## Part 2 — Power BI Usage Dashboard (Pull Data + Redesign)
 
 This is Part 2 of the manual walkthrough: using the **`SCU-Usage-Puller`** app
@@ -478,6 +499,8 @@ crashing the report. Your tenant may return real promptbook data instead.)*
    **Load**.
 4. Explore the 10 pages via the tabs at the bottom of the report canvas.
 
+</details>
+
 ---
 
 ## Part 3 — Automating the data pull without PowerShell
@@ -497,6 +520,9 @@ same constraint the original PowerShell already assumes.
 > for Approaches 1–2, Power BI Desktop for Approach 3), and the account owner
 > later completed that interactive sign-in live, which is what makes the real
 > Portal/Maker-Portal screenshots below possible for all three approaches now.
+
+<details>
+<summary><strong>▶ Approach 1 — Azure Logic App</strong> — click to expand (6 real Azure Portal screenshots)</summary>
 
 ### Approach 1 — Azure Logic App ([ARM template](Automation-Alternatives/LogicApp/azuredeploy.json) · [full walkthrough](Automation-Alternatives/LogicApp/WALKTHROUGH.md))
 
@@ -528,7 +554,12 @@ one-time, device-bound passkey/MFA sign-in. Full details in
 
 <p align="center"><img src="Automation-Alternatives/LogicApp/Steps/logicapp06-compose-summary-final-result.png" alt="Compose pull summary action showing the final run result" width="760"><br><sub>End-to-end result summary: <code>hourlyRowCount: 20</code>, <code>skillsetCount: 90</code>, real time window.</sub></p>
 
+</details>
+
 ---
+
+<details>
+<summary><strong>▶ Approach 2 — Power Automate Cloud Flow</strong> — click to expand (6 real Maker Portal screenshots)</summary>
 
 ### Approach 2 — Power Automate Cloud Flow ([flow definition](Automation-Alternatives/PowerAutomate/flow-definition.json) · [full walkthrough](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md))
 
@@ -563,7 +594,12 @@ details in
 
 <p align="center"><img src="Automation-Alternatives/PowerAutomate/Steps/pa06-compose-summary-final-result.png" alt="Compose pull summary action showing the final run result" width="760"><br><sub>End-to-end result summary: <code>hourlyRowCount: 20</code>, real <code>pulledAtUtc</code> timestamp.</sub></p>
 
+</details>
+
 ---
+
+<details>
+<summary><strong>▶ Approach 3 — Native Power Query (M)</strong> — click to expand (26-step click-by-click walkthrough)</summary>
 
 ### Approach 3 — Native Power Query (M)
 
@@ -1324,6 +1360,8 @@ Automation-Alternatives/PowerQuery/
 - [Handling authentication in a custom connector](https://learn.microsoft.com/power-query/samples/trippin/9-doing-more-with-metadata/tripping9)
 - [`Extension.CurrentCredential` — Power Query M reference](https://learn.microsoft.com/powerquery-m/extension-currentcredential)
 - [Install Power BI Desktop (Store vs. direct download)](https://learn.microsoft.com/power-bi/fundamentals/desktop-get-the-desktop)
+
+</details>
 
 ---
 
