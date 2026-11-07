@@ -14,7 +14,7 @@ step entirely and let Power BI call the API directly.
 
 ```mermaid
 flowchart TD
-    Problem(["🎯 Goal: richer SCU insight via Power BI integration\n(blocked by: no native connector — only an undocumented,\ndelegated-auth REST API)"])
+    Problem(["🎯 Goal: richer SCU insight via Power BI integration"])
 
     Problem --> Auth
 
