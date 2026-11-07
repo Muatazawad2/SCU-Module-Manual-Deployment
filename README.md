@@ -329,11 +329,24 @@ In **this example run's** dev tenant, the run completed with:
 | Available plugins | 90 |
 | Anomaly days (>2σ) | 4 |
 
-> [!TIP]
-> Want to see this exact sequence as real, unedited terminal screenshots —
-> prerequisite checks, sign-in, app reuse, admin consent, and the full data
-> pull through to the generated dashboard? See
-> [`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md).
+Here's that exact sequence captured live, as real, unedited terminal
+screenshots — nothing below is mocked up or composited (the standalone,
+fuller write-up is at
+[`Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md`](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md)):
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run01-terminal-ready.png" alt="PowerShell 7 terminal open in the solution folder" width="760"><br><sub>A fresh <code>pwsh</code> session, already in the folder holding <code>SCU-Setup.ps1</code> and <code>SCU-Run.ps1</code>.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run02-setup-prereqs-signin-app-reuse.png" alt="SCU-Setup.ps1 checking prerequisites, signing in, and reusing the app registration" width="760"><br><sub>Stage <b>1/5</b> confirms PowerShell, Azure CLI, and <code>ImportExcel</code> are all present; <b>2/5</b> confirms the Azure CLI sign-in and capacity name; <b>3/5</b> finds and reuses the existing app registration rather than creating a duplicate.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run03-setup-admin-consent.png" alt="SCU-Setup.ps1 requesting and confirming admin consent" width="760"><br><sub>Stage <b>4/5</b> requests and confirms admin consent for <code>Purview.DelegatedAccess</code>; stage <b>5/5</b> begins writing the local config.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run04-setup-complete-token-reused.png" alt="SCU-Setup.ps1 completed, reusing the cached refresh token" width="760"><br><sub>Stage <b>5/5</b> finds the existing cached refresh token still valid and reuses it silently — this run completed with <b>zero sign-in prompts</b>. <b>Setup complete!</b> confirms the config path, app ID, and tenant.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run05-datapull-started.png" alt="SCU-Run.ps1 starting the data pull" width="760"><br><sub><code>SCU-Run.ps1 -NoOpen</code> starts stage <b>1/4</b>: hourly aggregates and the full per-session table (paginated) come back first — real counts from this run's 90-day window.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run06-datapull-and-build-complete.png" alt="SCU-Run.ps1 finishing the full pull and building both dashboards" width="760"><br><sub>The rest of stage <b>1/4</b> (catalogs, identities, cost data, <code>SCU-Report.xlsx</code>/<code>.json</code> written), then stage <b>2/4</b> (<code>SCU-Dashboard.pbit</code> built) and stage <b>3/4</b> (<code>SCU-Dashboard.html</code> built) complete back to back.</sub></p>
+
+<p align="center"><img src="Automation-Alternatives/PowerShell-Run/Steps/run07-html-dashboard-output.png" alt="The generated SCU-Dashboard.html rendered in a browser" width="760"><br><sub>The <b>Cover</b> tab of the freshly generated dashboard — every number here (Total SCU, Total Sessions, Distinct Users, Estimated Cost, Available Plugins, Promptbooks) came from the exact run captured above, with zero manual editing.</sub></p>
 
 Two sub-endpoints (session catalog, promptbooks) returned **HTTP 500** for
 this tenant — expected for a low-activity dev/trial tenant. A busier,
