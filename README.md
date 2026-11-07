@@ -36,9 +36,11 @@ flowchart TD
     end
 
     P1 --> Static
-    P2 -. proof of concept .-> Static
-    P3 -. proof of concept .-> Static
+    P2 --> Verified
+    P3 --> Verified
     P4 --> Live
+
+    Verified(["✅ Verified: pulls real data successfully\n(21 rows, confirmed Succeeded)\n— not yet wired into a dashboard file"])
 
     subgraph Static["Part 2 — Static dashboard"]
         direction TB
@@ -56,11 +58,13 @@ flowchart TD
     classDef pull fill:#E0E7FF,stroke:#4338CA,color:#312E81
     classDef static fill:#F3E8FF,stroke:#7E22CE,color:#581C87
     classDef live fill:#D1FAE5,stroke:#047857,color:#064E3B
+    classDef verified fill:#ECFDF5,stroke:#059669,color:#065F46,stroke-dasharray: 4 2
 
     class Problem problem
     class A1,A2 part1
     class Token token
     class P1,P2,P3,P4 pull
+    class Verified verified
     class S1,S2 static
     class L1 live
 ```
@@ -71,7 +75,7 @@ jump straight there:
 | Stage in the diagram | Where it's covered |
 | --- | --- |
 | Authentication foundation | [**Part 1**](#scu-module--part-1-entra-app-registration-authentication-foundation) (below) |
-| Pulling the data (4 interchangeable ways) | [**Part 3**](#part-3--automating-the-data-pull-without-powershell) |
+| Pulling the data (4 interchangeable ways — all 4 verified with real API calls; only 2 feed an actual dashboard file today) | [**Part 3**](#part-3--automating-the-data-pull-without-powershell) |
 | Static dashboard (Excel export → template) | [**Part 2**](#part-2--power-bi-usage-dashboard-pull-data--redesign) |
 | Live dashboard (Power BI queries the API directly, no export step) | [**Part 3, Stage 6**](#stage-6-scaling-to-a-full-3-table-live-dashboard) |
 
