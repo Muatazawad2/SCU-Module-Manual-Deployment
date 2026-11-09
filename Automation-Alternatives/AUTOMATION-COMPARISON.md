@@ -152,4 +152,4 @@ query is refreshed.
 
 ---
 
-*Private working notes — review before adding to the public `SecurityCopilot` repo.*
+*Companion repo to [`Muatazawad2/SecurityCopilot`](https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module).*

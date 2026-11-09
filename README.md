@@ -6,7 +6,6 @@
 [![Azure Logic Apps](https://img.shields.io/badge/Azure_Logic_Apps-automation-8C3C9C?logo=azurelogicapps&logoColor=white)](Automation-Alternatives/LogicApp/WALKTHROUGH.md)
 [![Power Automate](https://img.shields.io/badge/Power_Automate-cloud_flow-0066FF?logo=powerautomate&logoColor=white)](Automation-Alternatives/PowerAutomate/WALKTHROUGH.md)
 [![PowerShell](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)](Automation-Alternatives/PowerShell-Run/WALKTHROUGH.md)
-[![Private repo](https://img.shields.io/badge/repo-private_working_notes-lightgrey)]()
 
 ## At a glance
 
@@ -1390,4 +1389,4 @@ Each approach's `summary.html` is a styled version of the same content — GitHu
 
 ---
 
-*Private working notes — review before adding to the public `SecurityCopilot` repo.*
+*Companion repo to [`Muatazawad2/SecurityCopilot`](https://github.com/Muatazawad2/SecurityCopilot/tree/main/SCU%20Module).*
