@@ -32,7 +32,7 @@ step entirely and let Power BI call the API directly.
 
 ```mermaid
 flowchart TD
-    Problem(["🎯 Goal: richer SCU insight via Power BI integration"])
+    Problem(["🎯 Richer SCU insight via Power BI integration"])
 
     Problem --> Auth
 
@@ -58,7 +58,7 @@ flowchart TD
     P3 --> Verified
     P4 --> Live
 
-    Verified(["✅ Verified: pulls real data\n— not yet wired to a dashboard"])
+    Verified(["✅ Pulls real data\n— not yet wired to a dashboard"])
 
     subgraph Static["Part 2 — Static dashboard"]
         direction TB
