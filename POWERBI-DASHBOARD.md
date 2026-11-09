@@ -41,9 +41,8 @@ PowerBI/
 
 ## Step 1 — Pull usage data with the registered app
 
-Using the `SCU-Usage-Puller` app registered in Part 1 (Client ID shown there
-is this walkthrough's example — substitute your own app's Client ID), and
-your tenant's Security Copilot capacity name (`"SecCo"` in this example):
+Using the `SCU-Usage-Puller` app registered in Part 1 (substitute your own
+app's Client ID) and your tenant's Security Copilot capacity name:
 
 ```powershell
 .\SCU-Setup.ps1 -AppId <your-app-client-id> -Capacity "<your-capacity-name>"

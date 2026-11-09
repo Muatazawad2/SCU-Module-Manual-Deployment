@@ -66,13 +66,13 @@
   <div class="mono">POST /api/data/v9.2/workflows
 { "name": "SCU Usage Puller (Power Automate POC)", "category": 5, "type": 1,
   "primaryentity": "none", "clientdata": "{ ...same workflow definition... }", "statecode": 0 }
-&rarr; 204 Created  (workflowid: bff2cf93-d0d4-f111-a05a-6045bd0748b4)
+&rarr; 204 Created  (workflowid: &lt;your-workflow-id&gt;)
 
-PATCH /api/data/v9.2/workflows(bff2cf93-...)
+PATCH /api/data/v9.2/workflows(&lt;your-workflow-id&gt;)
 { "statecode": 1, "statuscode": 2 }
 &rarr; Activated
 
-GET api.flow.microsoft.com/.../environments/231cb142.../flows
+GET api.flow.microsoft.com/.../environments/&lt;your-environment-id&gt;/flows
 &rarr; "SCU Usage Puller (Power Automate POC)"  state: <span style="color:#86efac">Started</span></div>
 </div>
 

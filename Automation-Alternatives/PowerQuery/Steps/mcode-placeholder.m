@@ -5,8 +5,8 @@ let
 
     GetAccessToken = () =>
         let
-            TenantId = "e6cf700c-2029-4e98-aedd-f589e62f7316",
-            ClientId = "72bb0a2b-c028-4a0f-bb57-78a81db6fc18",
+            TenantId = "<your-tenant-id>",
+            ClientId = "<your-app-client-id>",
             ApiAudience = "73c2949e-da2d-457a-9607-fcc665198967",
             TokenEndpoint = "https://login.microsoftonline.com/" & TenantId & "/oauth2/v2.0/token",
             FormBody = "grant_type=refresh_token&client_id=" & ClientId & "&refresh_token=" & ScuRefreshToken
@@ -19,7 +19,7 @@ let
         in
             AccessToken,
 
-    PodId = "ee221a39-3ce7-48ee-8b63-18bd56c52288", Workspace = "default", Capacity = "SecCo",
+    PodId = "<your-pod-id>", Workspace = "default", Capacity = "<your-capacity-name>",
     BaseUrl = "https://us.api.securityplatform.microsoft.com/pods/" & PodId & "/workspaces/" & Workspace
              & "/securitycopilot/usage/" & Capacity,
 

@@ -4,12 +4,12 @@ section SCUDashboard;
 // ============================================================================
 // Constants (ported from the existing ad-hoc Hourly/Sessions queries)
 // ============================================================================
-TenantId = "e6cf700c-2029-4e98-aedd-f589e62f7316";
-ClientId = "72bb0a2b-c028-4a0f-bb57-78a81db6fc18";
+TenantId = "<your-tenant-id>";
+ClientId = "<your-app-client-id>";
 ApiAudience = "73c2949e-da2d-457a-9607-fcc665198967";
-PodId = "ee221a39-3ce7-48ee-8b63-18bd56c52288";
+PodId = "<your-pod-id>";
 Workspace = "default";
-Capacity = "SecCo";
+Capacity = "<your-capacity-name>";
 TokenEndpoint = "https://login.microsoftonline.com/" & TenantId & "/oauth2/v2.0/token";
 BaseUrl = "https://us.api.securityplatform.microsoft.com/pods/" & PodId & "/workspaces/" & Workspace & "/securitycopilot/usage/" & Capacity;
 

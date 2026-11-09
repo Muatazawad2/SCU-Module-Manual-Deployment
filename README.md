@@ -154,15 +154,16 @@ the rest of the repo authenticates as.
 
 | Item | Value |
 | --- | --- |
-| Tenant | POA Deliverables Lab (`muatazawad.com`) |
-| Tenant ID | `e6cf700c-2029-4e98-aedd-f589e62f7316` |
-| Signed in as | `admin@MngEnvMCAP018908.onmicrosoft.com` |
+| Tenant | `<Your Tenant Name>` (`<your-tenant-domain>`) |
+| Tenant ID | `<your-tenant-id>` |
+| Signed in as | `<your-admin-account>` |
 | App name | `SCU-Usage-Puller` |
-| Application (client) ID | `72bb0a2b-c028-4a0f-bb57-78a81db6fc18` |
-| Object ID | `107d4a3f-d91d-43c1-b76d-2191e480d27d` |
+| Application (client) ID | `<your-app-client-id>` |
+| Object ID | `<your-app-object-id>` |
 
-> These IDs are specific to this dev tenant — registering in another tenant
-> produces different GUIDs, but the steps are identical.
+> Every value above is a placeholder, not a literal value from any specific
+> tenant — your own registration produces its own Tenant ID, Client ID, and
+> Object ID, but the steps are identical.
 
 ---
 
@@ -239,11 +240,11 @@ Both permissions are now listed, with **Admin consent required** shown and a
 
 ## Step 4 — Grant admin consent
 
-Clicked **Grant admin consent for POA Deliverables Lab**, confirmed the dialog.
+Clicked **Grant admin consent for `<Your Tenant Name>`**, confirmed the dialog.
 
 ![Grant admin consent confirmation dialog](Images/step13-grant-consent-confirmation.png)
 
-Result: both permissions show a green check and **"Granted for POA Deliverables Lab."**
+Result: both permissions show a green check and **"Granted for `<Your Tenant Name>`."**
 
 ![Admin consent granted — green checks](Images/step14-admin-consent-granted.png)
 
@@ -252,7 +253,7 @@ Result: both permissions show a green check and **"Granted for POA Deliverables 
 ## Verification (Microsoft Graph, via Azure CLI)
 
 ```powershell
-$appId = '72bb0a2b-c028-4a0f-bb57-78a81db6fc18'
+$appId = '<your-app-client-id>'
 $sp = az ad sp show --id $appId --only-show-errors | ConvertFrom-Json
 az rest --method get --uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?`$filter=clientId eq '$($sp.id)'" |
     ConvertFrom-Json | Select-Object -ExpandProperty value | Format-Table clientId, consentType, scope
@@ -315,9 +316,8 @@ PowerBI/
 
 ### Step 1 — Pull usage data with the registered app
 
-Using the `SCU-Usage-Puller` app registered in Part 1 (Client ID shown there
-is this walkthrough's example — substitute your own app's Client ID), and
-your tenant's Security Copilot capacity name (`"SecCo"` in this example):
+Using the `SCU-Usage-Puller` app registered in Part 1 (substitute your own
+app's Client ID) and your tenant's Security Copilot capacity name:
 
 ```powershell
 .\SCU-Setup.ps1 -AppId <your-app-client-id> -Capacity "<your-capacity-name>"
@@ -1037,12 +1037,11 @@ specific Power BI Desktop installation for a reason worth recording.
 > not committed to this repo. Every screenshot below was taken from
 > Table/Report view and Power BI's own **Access Web content** credential
 > dialog with the Advanced Editor and DAX/M panes closed, specifically to
-> avoid ever capturing the token. The one tenant identifier visible in two
-> screenshots (the Entra **Tenant ID**) is already published in plain text
-> in this document's [example environment table](#example-environment-from-this-walkthrough-yours-will-differ) — it is not a
-> secret. The one M code file included here
-> ([`SCUDashboard-connector.pq`](Automation-Alternatives/PowerQuery/Steps/SCUDashboard-connector.pq)) takes its
-> token from a Power BI credential prompt at runtime
+> avoid ever capturing the token. Any tenant/app/pod identifiers visible in
+> earlier drafts of these screenshots have been redacted — none are shown
+> in plain text anywhere in this document. The one M code file included
+> here ([`SCUDashboard-connector.pq`](Automation-Alternatives/PowerQuery/Steps/SCUDashboard-connector.pq))
+> takes its token from a Power BI credential prompt at runtime
 > (`Extension.CurrentCredential()`) and contains no secret value at all.
 
 ##### Goal

@@ -44,8 +44,8 @@
 
     GetAccessToken = () =&gt;
         <span class="kw">let</span>
-            TenantId = <span class="str">"e6cf700c-2029-4e98-aedd-f589e62f7316"</span>,
-            ClientId = <span class="str">"72bb0a2b-c028-4a0f-bb57-78a81db6fc18"</span>,
+            TenantId = <span class="str">"&lt;your-tenant-id&gt;"</span>,
+            ClientId = <span class="str">"&lt;your-app-client-id&gt;"</span>,
             ApiAudience = <span class="str">"73c2949e-da2d-457a-9607-fcc665198967"</span>,
             TokenEndpoint = <span class="str">"https://login.microsoftonline.com/"</span> &amp; TenantId &amp; <span class="str">"/oauth2/v2.0/token"</span>,
             FormBody = <span class="str">"grant_type=refresh_token&amp;client_id="</span> &amp; ClientId &amp; <span class="str">"&amp;refresh_token="</span> &amp; ScuRefreshToken
@@ -58,7 +58,7 @@
         <span class="kw">in</span>
             AccessToken,
 
-    PodId = <span class="str">"ee221a39-3ce7-48ee-8b63-18bd56c52288"</span>, Workspace = <span class="str">"default"</span>, Capacity = <span class="str">"SecCo"</span>,
+    PodId = <span class="str">"&lt;your-pod-id&gt;"</span>, Workspace = <span class="str">"default"</span>, Capacity = <span class="str">"&lt;your-capacity-name&gt;"</span>,
     BaseUrl = <span class="str">"https://us.api.securityplatform.microsoft.com/pods/"</span> &amp; PodId &amp; <span class="str">"/workspaces/"</span> &amp; Workspace
              &amp; <span class="str">"/securitycopilot/usage/"</span> &amp; Capacity,
 
